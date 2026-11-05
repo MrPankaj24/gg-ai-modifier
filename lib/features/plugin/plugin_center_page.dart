@@ -1,5 +1,5 @@
-/// 插件中心页面
-/// 支持 Skill 导入、管理、启用/禁用
+/// Documentation.
+/// Documentation.
 
 import 'dart:convert';
 import 'dart:io';
@@ -11,10 +11,10 @@ import 'package:path_provider/path_provider.dart';
 import '../../core/models/skill_model.dart';
 import '../../main.dart';
 
-/// Skill 列表 Provider
+/// Documentation.
 final skillsProvider = StateProvider<List<SkillModel>>((ref) => []);
 
-/// 插件中心页面
+/// Documentation.
 class PluginCenterPage extends ConsumerStatefulWidget {
   const PluginCenterPage({super.key});
 
@@ -23,48 +23,43 @@ class PluginCenterPage extends ConsumerStatefulWidget {
 }
 
 class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
-  /// 系统内置 Skill
+  /// Built-in Skill
   static final _builtinSkill = SkillModel(
     id: 'builtin_beginner_guide',
-    name: '新手引导专家',
-    content: '''你是一个极具耐心、温柔且专业的 GG-AI新手引导专家。
+    name: 'Beginner Guide Expert',
+    content: '''You are a patient, friendly, and professional GG-AI beginner guide.
 
-你的主要目标是帮助完全没有内存修改经验的新手，轻松、安心地学会使用本修改器修改单机游戏。
+Your goal is to help people with no memory-editing experience learn to use this modifier safely with single-player games.
 
-### 核心原则
-- **极度友好与耐心**：用最简单易懂的语言，像教小白朋友一样一步一步讲解。
-- **零基础假设**：默认用户完全不懂内存修改、GG、搜索等概念，每次都要解释清楚。
-- **安全第一**：每一步重要操作前都必须提醒"请先备份存档"，并说明可能的风险。
-- **只限单机**：一旦用户提到在线游戏，立刻温柔但坚定地拒绝，并解释原因。
-- **逐步引导**：永远一次只教一个步骤，确认用户理解并成功后再进行下一步。
-- **鼓励提问**：随时欢迎用户说"看不懂""不会操作""出了什么问题"等。
+### Principles
+- Be friendly, patient, and explain one step at a time.
+- Assume the user is new to memory editing, GG, and searches.
+- Before risky actions, remind the user to back up save data.
+- Refuse online-game assistance and explain why.
+- Invite questions and confirm each step succeeded.
 
-### 必须掌握并能清晰讲解的内容
-1. 如何选择并附加游戏进程
-2. 什么是精确搜索、模糊搜索、AOB
-3. 如何搜索数值（已知数值 / 未知数值）
-4. 搜索到结果后如何修改和冻结
-5. 为什么推荐使用冻结功能
-6. 如何保存地址和导出脚本
-7. 常见问题处理（结果太多、地址失效、游戏崩溃等）
+### Topics
+1. Selecting and attaching a game process
+2. Exact, fuzzy, range, and AOB searches
+3. Searching known and unknown values
+4. Editing and freezing results
+5. Saving addresses and exporting scripts
+6. Troubleshooting too many results, stale addresses, and crashes
 
-### 回复风格要求
-- 使用**最白话的中文**，多用"咱们""现在我们来……""很简单，就是……"等语气。
-- 大量使用编号步骤（1. 2. 3.）。
-- 每一步操作后都要问："这一步成功了吗？""你看到什么结果？"
-- 可以适当使用生活中的比喻（如"内存就像游戏的大脑，我们在里面找金币的存放位置"）。
-- 回复中可使用 Markdown 列表、代码块，但不要使用过于复杂的表格。
-- 结束时总是询问："下一步你想做什么？或者哪里还不明白？"
+### Style
+- Use plain, friendly English and numbered steps.
+- Ask whether each step worked and what the user sees.
+- Use Markdown lists and code blocks, but avoid complex tables.
+- End by asking what the user wants to do next.
 
-### 工作流程（新手版）
-1. 先确认用户是否已打开游戏并进入对应界面。
-2. 教用户如何附加进程。
-3. 询问用户想修改什么（金币、生命、等级等）。
-4. 根据目标给出最简单、最安全的修改方案。
-5. 每步操作后等待用户反馈，再继续下一步。
-6. 成功后教用户如何保存或做成一键脚本。
+### Workflow
+1. Confirm the game is open and the relevant screen is visible.
+2. Teach the user to attach the process.
+3. Ask what value they want to edit.
+4. Give the safest, simplest plan and wait for feedback after each step.
+5. After success, explain how to save the address or create a one-tap script.
 
-现在开始作为最贴心的新手引导专家，帮助用户从零学会内存修改！''',
+Begin helping the user learn memory editing from the basics.''',
     isBuiltin: true,
     isEnabled: false,
     createdAt: DateTime(2026, 1, 1),
@@ -83,14 +78,14 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
     final storage = ref.read(storageServiceProvider);
     final userSkills = storage.getAllSkills();
 
-    // 读取内置 Skill 的启用状态
+    // Implementation detail.
     final builtinEnabled = storage.getSetting('skill_${_builtinSkill.id}_enabled', defaultValue: false) as bool;
     final builtinWithState = _builtinSkill.copyWith(isEnabled: builtinEnabled);
 
-    // 合并系统内置 Skill 和用户导入的 Skill
+    // Implementation detail.
     final allSkills = <SkillModel>[builtinWithState];
 
-    // 添加用户导入的 Skill（避免重复添加内置 Skill）
+    // Implementation detail.
     for (final skill in userSkills) {
       if (skill.id != _builtinSkill.id) {
         allSkills.add(skill);
@@ -100,7 +95,7 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
     ref.read(skillsProvider.notifier).state = allSkills;
   }
 
-  /// 导入 Skill 文件
+  /// Documentation.
   Future<void> _importSkill() async {
     try {
       FilePickerResult? result = await FilePicker.pickFiles(
@@ -119,20 +114,20 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
         final fileObj = File(file.path!);
         content = await fileObj.readAsString();
       } else {
-        _showSnackBar('❌ 无法读取文件');
+        _showSnackBar('❌ Unable to read file');
         return;
       }
 
       if (!mounted) return;
 
-      // 显示命名对话框
+      // Implementation detail.
       _showNameDialog(content, file.name, file.path);
     } catch (e) {
-      _showSnackBar('❌ 导入失败: $e');
+      _showSnackBar('❌ Import failed: $e');
     }
   }
 
-  /// 显示命名对话框
+  /// Documentation.
   void _showNameDialog(String content, String fileName, String? filePath) {
     final nameController = TextEditingController(
       text: fileName.replaceAll('.md', ''),
@@ -142,15 +137,15 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFFFFFFFF),
-        title: const Text('导入 Skill'),
+        title: const Text('Import Skill'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
               decoration: const InputDecoration(
-                labelText: 'Skill 名称',
-                hintText: '输入显示名称',
+                labelText: 'Skill name',
+                hintText: 'Enter a display name',
               ),
             ),
             const SizedBox(height: 12),
@@ -179,31 +174,31 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
               final name = nameController.text.trim();
               if (name.isEmpty) {
-                _showSnackBar('请输入名称');
+                _showSnackBar('Enter a name');
                 return;
               }
               _saveSkill(name, content, filePath);
               Navigator.pop(context);
             },
-            child: const Text('导入'),
+            child: const Text('import '),
           ),
         ],
       ),
     );
   }
 
-  /// 保存 Skill
+  /// Save Skill
   Future<void> _saveSkill(String name, String content, String? filePath) async {
     final storage = ref.read(storageServiceProvider);
     final now = DateTime.now();
 
-    // 复制文件到应用目录
+    // Implementation detail.
     String savedPath = '';
     if (filePath != null) {
       try {
@@ -232,21 +227,21 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
 
     await storage.saveSkill(skill);
     _loadSkills();
-    _showSnackBar('✅ Skill "$name" 已导入');
+    _showSnackBar('✅ Skill "$name" Imported');
   }
 
-  /// 删除 Skill
+  /// Delete Skill
   void _deleteSkill(SkillModel skill) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFFFFFFFF),
-        title: const Text('删除 Skill'),
-        content: Text('确定要删除 "${skill.name}" 吗？'),
+        title: const Text('Delete Skill'),
+        content: Text('Delete "${skill.name}" ?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -254,22 +249,22 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
               await storage.deleteSkill(skill.id);
               _loadSkills();
               Navigator.pop(context);
-              _showSnackBar('✅ 已删除 "${skill.name}"');
+              _showSnackBar('✅ Delete "${skill.name}"');
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('删除'),
+            child: const Text('Delete'),
           ),
         ],
       ),
     );
   }
 
-  /// 切换 Skill 启用状态
+  /// Documentation.
   Future<void> _toggleSkill(SkillModel skill) async {
     final storage = ref.read(storageServiceProvider);
 
     if (skill.isBuiltin) {
-      // 内置 Skill 保存到设置中
+      // Implementation detail.
       final newValue = !skill.isEnabled;
       await storage.saveSetting('skill_${skill.id}_enabled', newValue);
     } else {
@@ -278,13 +273,13 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
 
     _loadSkills();
 
-    // 同步所有已启用的 Skill
+    // Implementation detail.
     final allSkills = ref.read(skillsProvider);
     final enabledSkills = allSkills.where((s) => s.isEnabled).toList();
     _syncSkillsToNative(enabledSkills);
   }
 
-  /// 同步 Skill 到原生层（供悬浮窗读取）
+  /// Documentation.
   void _syncSkillsToNative(List<SkillModel> enabledSkills) {
     try {
       final skillsJson = enabledSkills.map((s) => {
@@ -297,13 +292,13 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
     } catch (_) {}
   }
 
-  /// 显示导出选择对话框
+  /// Documentation.
   void _showExportDialog() {
     final storage = ref.read(storageServiceProvider);
     final skills = storage.getAllSkills();
 
     if (skills.isEmpty) {
-      _showSnackBar('没有可导出的 Skill');
+      _showSnackBar('No skills available to export');
       return;
     }
 
@@ -314,7 +309,7 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           backgroundColor: const Color(0xFFFFFFFF),
-          title: const Text('导出 Skill'),
+          title: const Text('Export Skill'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -322,7 +317,7 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
                 return CheckboxListTile(
                   title: Text(skill.name),
                   subtitle: Text(
-                    skill.isBuiltin ? '系统内置' : '用户导入',
+                    skill.isBuiltin ? 'Built-in' : 'User imported',
                     style: const TextStyle(fontSize: 12, color: Color(0xFF4A6572)),
                   ),
                   value: selectedToExport.contains(skill.id),
@@ -343,7 +338,7 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('取消'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: selectedToExport.isEmpty
@@ -352,7 +347,7 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
                       Navigator.pop(context);
                       _exportSelectedSkills(selectedToExport);
                     },
-              child: const Text('导出'),
+              child: const Text('export '),
             ),
           ],
         ),
@@ -360,7 +355,7 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
     );
   }
 
-  /// 导出选中的 Skill
+  /// Documentation.
   Future<void> _exportSelectedSkills(Set<String> selectedIds) async {
     final storage = ref.read(storageServiceProvider);
     final allSkills = storage.getAllSkills();
@@ -383,9 +378,9 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
         }
       }
 
-      _showSnackBar('✅ 已导出 $successCount 个 Skill');
+      _showSnackBar('✅ Exported $successCount skills');
     } catch (e) {
-      _showSnackBar('❌ 导出失败: $e');
+      _showSnackBar('❌ Export failed: $e');
     }
   }
 
@@ -407,20 +402,20 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
           children: [
             Icon(Icons.extension, color: Color(0xFF3D5AFE)),
             SizedBox(width: 8),
-            Text('插件中心'),
+            Text('Plugin Center'),
           ],
         ),
         actions: [
-          // 导出按钮
+          // export button
           IconButton(
             icon: const Icon(Icons.upload),
-            tooltip: '导出 Skill',
+            tooltip: 'Export Skill',
             onPressed: _showExportDialog,
           ),
-          // 添加按钮
+          // Implementation detail.
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: '导入 Skill',
+            tooltip: 'Import Skill',
             onPressed: _importSkill,
           ),
         ],
@@ -430,7 +425,7 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 状态卡片
+            // Implementation detail.
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -450,7 +445,7 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Skill 管理中心',
+                          'Skill Manager',
                           style: TextStyle(
                             color: Color(0xFF213333),
                             fontSize: 16,
@@ -459,7 +454,7 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '已导入 ${skills.length} 个 Skill，${skills.where((s) => s.isEnabled).length} 个已启用',
+                          '${skills.length} skills imported; ${skills.where((s) => s.isEnabled).length} enabled',
                           style: const TextStyle(color: Color(0xFF4A6572), fontSize: 12),
                         ),
                       ],
@@ -470,11 +465,11 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
             ),
             const SizedBox(height: 16),
 
-            // Skill 列表标题
+            // Implementation detail.
             Row(
               children: [
                 const Text(
-                  '📋 已导入的 Skill',
+                  '📋 Imported Skills',
                   style: TextStyle(
                     color: Color(0xFF213333),
                     fontSize: 16,
@@ -483,7 +478,7 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
                 ),
                 const Spacer(),
                 Text(
-                  '点击开关启用/禁用',
+                  'Toggle to enable or disable',
                   style: TextStyle(
                     color: const Color(0xFF4A6572).withOpacity(0.7),
                     fontSize: 11,
@@ -493,7 +488,7 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
             ),
             const SizedBox(height: 12),
 
-            // Skill 列表
+            // Implementation detail.
             Expanded(
               child: skills.isEmpty
                   ? Center(
@@ -507,12 +502,12 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
                           ),
                           const SizedBox(height: 16),
                           const Text(
-                            '暂无 Skill',
+                            'No skills',
                             style: TextStyle(color: Color(0xFF4A6572), fontSize: 14),
                           ),
                           const SizedBox(height: 8),
                           const Text(
-                            '点击右上角 + 导入 .md 文件',
+                            'Tap + in the upper-right to import a .md file',
                             style: TextStyle(color: Color(0xFF4A6572), fontSize: 12),
                           ),
                         ],
@@ -539,7 +534,7 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            // 图标
+            // Implementation detail.
             Container(
               width: 40,
               height: 40,
@@ -559,7 +554,7 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
             ),
             const SizedBox(width: 12),
 
-            // 名称和信息
+            // name  and information
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -585,7 +580,7 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text(
-                            '系统内置',
+                            'Built-in',
                             style: TextStyle(
                               fontSize: 10,
                               color: Color(0xFF3D5AFE),
@@ -597,7 +592,7 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${skill.content.length} 字符 · ${skill.isEnabled ? "已启用" : "未启用"}',
+                    '${skill.content.length} characters · ${skill.isEnabled ? "Enabled" : "Disabled"}',
                     style: const TextStyle(
                       fontSize: 11,
                       color: Color(0xFF4A6572),
@@ -607,14 +602,14 @@ class _PluginCenterPageState extends ConsumerState<PluginCenterPage> {
               ),
             ),
 
-            // 开关
+            // Implementation detail.
             Switch(
               value: skill.isEnabled,
               onChanged: (_) => _toggleSkill(skill),
               activeColor: const Color(0xFF3D5AFE),
             ),
 
-            // 删除按钮（内置 Skill 不显示）
+            // Implementation detail.
             if (!skill.isBuiltin)
               IconButton(
                 icon: const Icon(Icons.delete_outline, size: 20),

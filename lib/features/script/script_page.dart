@@ -1,5 +1,5 @@
-/// 脚本库页面
-/// 支持脚本持久化存储、通过 LuaJ 执行 Lua 脚本、运行日志管理
+/// Documentation.
+/// Documentation.
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -8,15 +8,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/script_model.dart';
 import '../../main.dart';
 
-/// 脚本列表 Provider
+/// Documentation.
 final scriptsProvider = StateProvider<List<ScriptModel>>((ref) => []);
 
-/// 运行日志 Provider
+/// Run log Provider
 final scriptLogsProvider = StateProvider<List<Map<String, String>>>(
   (ref) => [],
 );
 
-/// 脚本库页面
+/// Documentation.
 class ScriptPage extends ConsumerStatefulWidget {
   const ScriptPage({super.key});
 
@@ -36,7 +36,7 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
     });
   }
 
-  /// 加载脚本（内置 + 用户保存的）
+  /// Documentation.
   void _loadScripts() {
     final storage = ref.read(storageServiceProvider);
     final savedScripts = storage.getAllScripts();
@@ -44,11 +44,11 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
     final builtinScripts = [
       ScriptModel(
         id: 'builtin_test',
-        name: '运行测试',
-        description: 'Lua 菜单弹窗 + 数据搜索测试脚本',
+        name: 'Run Test',
+        description: 'Lua menu and data search test script',
         content: _builtinTestScript,
         isBuiltin: true,
-        tags: ['测试', '菜单'],
+        tags: ['Test', 'Menu'],
       ),
     ];
 
@@ -62,11 +62,11 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
 
     ref.read(scriptsProvider.notifier).state = mergedMap.values.toList();
 
-    // 同步脚本到 SharedPreferences（供悬浮窗读取）
+    // Implementation detail.
     _syncScriptsToNative(mergedMap.values.toList());
   }
 
-  /// 同步脚本到原生层
+  /// Documentation.
   void _syncScriptsToNative(List<ScriptModel> scripts) {
     try {
       final scriptsJson = scripts
@@ -84,12 +84,12 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
     } catch (_) {}
   }
 
-  /// 加载运行日志（合并 Hive 存储 + 悬浮窗 SharedPreferences 存储）
+  /// Documentation.
   void _loadLogs() {
     final storage = ref.read(storageServiceProvider);
     final allLogs = <Map<String, String>>[];
 
-    // 1. 从 Hive 读取（主应用保存的日志）
+    // Implementation detail.
     try {
       final logsJson =
           storage.getSetting('script_logs', defaultValue: '[]') as String;
@@ -99,7 +99,7 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
       }
     } catch (_) {}
 
-    // 2. 从 SharedPreferences 读取（悬浮窗保存的日志）
+    // Implementation detail.
     try {
       const channel = MethodChannel('com.yl.aigg/bridge');
       channel
@@ -109,7 +109,7 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
               for (final log in result) {
                 if (log is Map) {
                   final logMap = Map<String, String>.from(log);
-                  // 去重：检查是否已存在同名日志
+                  // Implementation detail.
                   final exists = allLogs.any(
                     (l) => l['name'] == logMap['name'],
                   );
@@ -119,7 +119,7 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
                 }
               }
             }
-            // 按时间倒序排列
+            // Implementation detail.
             allLogs.sort(
               (a, b) => (b['time'] ?? '').compareTo(a['time'] ?? ''),
             );
@@ -137,7 +137,7 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
     }
   }
 
-  /// 保存运行日志
+  /// SaveRun log
   Future<void> _saveLog(String scriptName, String output) async {
     final storage = ref.read(storageServiceProvider);
     final now = DateTime.now();
@@ -158,16 +158,16 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
     final updatedLogs = [newLog, ...currentLogs];
     ref.read(scriptLogsProvider.notifier).state = updatedLogs;
 
-    // 持久化保存
+    // Implementation detail.
     await storage.saveSetting('script_logs', jsonEncode(updatedLogs));
   }
 
-  /// 运行脚本
+  /// RunScript
   Future<void> _runScript(ScriptModel script) async {
     if (_isRunning) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('⚠️ 已有脚本正在执行')));
+      ).showSnackBar(const SnackBar(content: Text('⚠️ A script is already running')));
       return;
     }
 
@@ -177,7 +177,7 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
 
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text('🚀 正在运行: ${script.name}')));
+    ).showSnackBar(SnackBar(content: Text('🚀 Running: ${script.name}')));
 
     try {
       const channel = MethodChannel('com.yl.aigg/bridge');
@@ -186,12 +186,12 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
         'scriptContent': script.content,
       });
 
-      final output = result?.toString() ?? '执行完成';
+      final output = result?.toString() ?? 'Execution complete';
 
-      // 自动保存日志
+      // Implementation detail.
       await _saveLog(script.name, output);
 
-      // 更新执行次数
+      // Implementation detail.
       final scripts = ref.read(scriptsProvider);
       final updatedScripts = scripts.map((s) {
         if (s.id == script.id) {
@@ -211,10 +211,10 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('✅ ${script.name} 执行完成，日志已保存')));
+        ).showSnackBar(SnackBar(content: Text('✅ ${script.name} completed; log saved')));
       }
     } catch (e) {
-      final errorOutput = '执行失败: $e';
+      final errorOutput = 'Execution failed: $e';
       await _saveLog(script.name, errorOutput);
 
       setState(() {
@@ -224,18 +224,18 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('❌ 执行失败: $e')));
+        ).showSnackBar(SnackBar(content: Text('❌ Execution failed: $e')));
       }
     }
   }
 
-  /// 刷新脚本和日志
+  /// Documentation.
   void _refresh() {
     _loadScripts();
     _loadLogs();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('✅ 已刷新脚本列表和运行日志'),
+        content: Text('✅ Script list and run log refreshed'),
         duration: Duration(seconds: 1),
       ),
     );
@@ -251,14 +251,14 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
           children: [
             Icon(Icons.code, color: Color(0xFF3D5AFE)),
             SizedBox(width: 8),
-            Text('脚本库'),
+            Text('Script Library'),
           ],
         ),
         actions: [
-          // 脚本运行日志按钮
+          // Script Run Logbutton
           IconButton(
             icon: const Icon(Icons.receipt_long),
-            tooltip: '脚本运行日志',
+            tooltip: 'Script Run Log',
             onPressed: () {
               Navigator.push(
                 context,
@@ -266,16 +266,16 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
               );
             },
           ),
-          // 刷新按钮
+          // refresh button
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: '刷新脚本列表',
+            tooltip: 'Refresh script list',
             onPressed: _refresh,
           ),
-          // 添加按钮
+          // Implementation detail.
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: '创建新脚本',
+            tooltip: 'Create new script',
             onPressed: () {
               _showCreateScriptDialog();
             },
@@ -284,7 +284,7 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
       ),
       body: Column(
         children: [
-          // 运行状态
+          // Runstatus
           if (_isRunning)
             Container(
               padding: const EdgeInsets.all(12),
@@ -297,11 +297,11 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                   SizedBox(width: 8),
-                  Text('脚本运行中...', style: TextStyle(color: Colors.orange)),
+                  Text('Script is running...', style: TextStyle(color: Colors.orange)),
                 ],
               ),
             ),
-          // 脚本列表
+          // Implementation detail.
           Expanded(
             child: scripts.isEmpty
                 ? const Center(
@@ -310,10 +310,10 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
                       children: [
                         Icon(Icons.code_off, size: 64, color: Color(0xFF4A6572)),
                         SizedBox(height: 16),
-                        Text('暂无脚本', style: TextStyle(color: Color(0xFF4A6572))),
+                        Text('No scripts', style: TextStyle(color: Color(0xFF4A6572))),
                         SizedBox(height: 8),
                         Text(
-                          '点击右上角 + 创建新脚本',
+                          'Tap + in the upper-right to create a script',
                           style: TextStyle(color: Color(0xFF4A6572), fontSize: 12),
                         ),
                       ],
@@ -378,7 +378,7 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
                           children: [
                             Icon(Icons.play_arrow, size: 16),
                             SizedBox(width: 8),
-                            Text('运行'),
+                            Text('Run'),
                           ],
                         ),
                       ),
@@ -388,7 +388,7 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
                           children: [
                             Icon(Icons.edit, size: 16),
                             SizedBox(width: 8),
-                            Text('编辑'),
+                            Text('Edit'),
                           ],
                         ),
                       ),
@@ -399,7 +399,7 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
                             children: [
                               Icon(Icons.delete, size: 16, color: Colors.red),
                               SizedBox(width: 8),
-                              Text('删除', style: TextStyle(color: Colors.red)),
+                              Text('Delete', style: TextStyle(color: Colors.red)),
                             ],
                           ),
                         ),
@@ -451,7 +451,7 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
                   const Spacer(),
                   if (script.executionCount > 0)
                     Text(
-                      '已执行 ${script.executionCount} 次',
+                      'Executed ${script.executionCount} times',
                       style: const TextStyle(fontSize: 11, color: Color(0xFF4A6572)),
                     ),
                 ],
@@ -506,7 +506,7 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
                       _runScript(script);
                     },
                     icon: const Icon(Icons.play_arrow),
-                    label: const Text('运行'),
+                    label: const Text('Run'),
                   ),
                 ],
               ),
@@ -552,25 +552,25 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFFFFFFFF),
-        title: Text(script == null ? '创建脚本' : '编辑脚本'),
+        title: Text(script == null ? 'Create Script' : 'Edit Script'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: '脚本名称'),
+                decoration: const InputDecoration(labelText: 'Script name'),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: descController,
-                decoration: const InputDecoration(labelText: '描述'),
+                decoration: const InputDecoration(labelText: 'Description'),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: contentController,
                 decoration: const InputDecoration(
-                  labelText: 'Lua 代码',
+                  labelText: 'Lua code',
                   alignLabelWithHint: true,
                 ),
                 maxLines: 10,
@@ -583,7 +583,7 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -594,13 +594,13 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
               if (name.isEmpty) {
                 ScaffoldMessenger.of(
                   context,
-                ).showSnackBar(const SnackBar(content: Text('请输入脚本名称')));
+                ).showSnackBar(const SnackBar(content: Text('Enter a script name')));
                 return;
               }
               if (content.isEmpty) {
                 ScaffoldMessenger.of(
                   context,
-                ).showSnackBar(const SnackBar(content: Text('请输入脚本内容')));
+                ).showSnackBar(const SnackBar(content: Text('Enter script content')));
                 return;
               }
 
@@ -635,9 +635,9 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
               Navigator.pop(context);
               ScaffoldMessenger.of(
                 context,
-              ).showSnackBar(SnackBar(content: Text('✅ 脚本已保存: $name')));
+              ).showSnackBar(SnackBar(content: Text('✅ Script saved: $name')));
             },
-            child: const Text('保存'),
+            child: const Text('Save'),
           ),
         ],
       ),
@@ -653,12 +653,12 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFFFFFFFF),
-        title: const Text('删除脚本'),
-        content: Text('确定要删除 "${script.name}" 吗？'),
+        title: const Text('DeleteScript'),
+        content: Text('Delete "${script.name}" ?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -671,65 +671,65 @@ class _ScriptPageState extends ConsumerState<ScriptPage> {
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('删除'),
+            child: const Text('Delete'),
           ),
         ],
       ),
     );
   }
 
-  // ==================== 内置脚本 ====================
+  // Implementation detail.
 
   static const String _builtinTestScript = '''
 -- ============================================
--- 游戏修改器 Lua 测试脚本
--- 功能：菜单弹窗 + 数据搜索测试
+-- game modifier Lua test script
+-- Script implementation detail.
 -- ============================================
 
--- ====== 搜索数据函数 ======
+-- Script implementation detail.
 function searchData(value, valueType)
     gg.clearResults()
     gg.searchNumber(value, valueType)
     local count = gg.getResultCount()
-    gg.toast("搜索完成，找到 " .. count .. " 条结果")
+    gg.toast("Search complete; found " .. count .. " results")
     return count
 end
 
--- ====== 二级菜单1：数值搜索 ======
+-- Script implementation detail.
 function menu1_search()
     local choice = gg.choice({
-        " 搜索整数 9999",
-        " 搜索浮点 1.0",
-        " 搜索双精度 3.14"
-    }, nil, "【数值搜索】请选择搜索类型")
+        " Search integer 9999",
+        " Search float 1.0",
+        " Search double 3.14"
+    }, nil, "【Value search】Choose a search type")
 
     if choice == nil then
-        gg.toast("已取消")
+        gg.toast("Cancelled")
         return
     end
 
     if choice == 1 then
         searchData(9999, gg.TYPE_DWORD)
-        gg.toast("搜索整数 9999 完成")
+        gg.toast("Search integer 9999 complete")
     elseif choice == 2 then
         searchData("1.0", gg.TYPE_FLOAT)
-        gg.toast("搜索浮点 1.0 完成")
+        gg.toast("Search float 1.0 complete")
     elseif choice == 3 then
         searchData("3.14", gg.TYPE_DOUBLE)
-        gg.toast("搜索双精度 3.14 完成")
+        gg.toast("Search double 3.14 complete")
     end
 end
 
--- ====== 二级菜单2：高级操作 ======
+-- Script implementation detail.
 function menu2_advanced()
     local choice = gg.choice({
-        " 修改搜索结果为 88888",
-        " 冻结当前结果",
-        " 清除所有结果"
-    }, nil, "【高级操作】请选择操作")
+        " Change search results to 88888",
+        " Freeze current results",
+        " Clear all results"
+    }, nil, "【Advanced operations】Choose an operation")
 
     if choice == nil then
-        gg.toast("已取消")
+        gg.toast("Cancelled")
         return
     end
 
@@ -742,9 +742,9 @@ function menu2_advanced()
                 results[i].flags = gg.TYPE_DWORD
             end
             gg.setValues(results)
-            gg.toast("已修改 " .. count .. " 条数据为 88888")
+            gg.toast("Updated " .. count .. " items to 88888")
         else
-            gg.toast("没有搜索结果，请先搜索数据")
+            gg.toast("No search results,search first")
         end
     elseif choice == 2 then
         local count = gg.getResultCount()
@@ -754,28 +754,28 @@ function menu2_advanced()
                 results[i].freeze = true
             end
             gg.addListItems(results)
-            gg.toast("已冻结 " .. count .. " 条数据")
+            gg.toast("Froze " .. count .. " items")
         else
-            gg.toast("没有搜索结果，请先搜索数据")
+            gg.toast("No search results,search first")
         end
     elseif choice == 3 then
         gg.clearResults()
         gg.clearList()
-        gg.toast("已清除所有结果和冻结列表")
+        gg.toast("All results and frozen addresses cleared")
     end
 end
 
--- ====== 主菜单 ======
+-- Script implementation detail.
 function mainMenu()
     while true do
         local main = gg.choice({
-            " 数值搜索",
-            " 高级操作",
-            " 退出脚本"
-        }, nil, "=== Lua 测试脚本 v1.0 ===")
+            " Value search",
+            " Advanced operations",
+            " Exit script"
+        }, nil, "=== Lua test script v1.0 ===")
 
         if main == nil or main == 3 then
-            gg.toast("脚本已退出")
+            gg.toast("Script exited")
             break
         elseif main == 1 then
             menu1_search()
@@ -785,14 +785,14 @@ function mainMenu()
     end
 end
 
--- ====== 启动 ======
-gg.toast("Lua 测试脚本已加载 ")
+-- Script implementation detail.
+gg.toast("Lua test script loaded ")
 gg.sleep(1000)
 mainMenu()
 ''';
 }
 
-/// 脚本运行日志页面
+/// Documentation.
 class ScriptLogPage extends ConsumerStatefulWidget {
   const ScriptLogPage({super.key});
 
@@ -811,14 +811,14 @@ class _ScriptLogPageState extends ConsumerState<ScriptLogPage> {
           children: [
             Icon(Icons.receipt_long, color: Color(0xFF3D5AFE)),
             SizedBox(width: 8),
-            Text('脚本运行日志'),
+            Text('Script Run Log'),
           ],
         ),
         actions: [
-          // 清空日志
+          // Clear logs
           IconButton(
             icon: const Icon(Icons.delete_sweep),
-            tooltip: '清空所有日志',
+            tooltip: 'Clear all logs',
             onPressed: logs.isEmpty
                 ? null
                 : () async {
@@ -826,19 +826,19 @@ class _ScriptLogPageState extends ConsumerState<ScriptLogPage> {
                       context: context,
                       builder: (context) => AlertDialog(
                         backgroundColor: const Color(0xFFFFFFFF),
-                        title: const Text('清空日志'),
-                        content: const Text('确定要清空所有运行日志吗？'),
+                        title: const Text('Clear logs'),
+                        content: const Text('Clear all run logs?'),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: const Text('取消'),
+                            child: const Text('Cancel'),
                           ),
                           ElevatedButton(
                             onPressed: () => Navigator.pop(context, true),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red,
                             ),
-                            child: const Text('清空'),
+                            child: const Text('Clear'),
                           ),
                         ],
                       ),
@@ -859,10 +859,10 @@ class _ScriptLogPageState extends ConsumerState<ScriptLogPage> {
                 children: [
                   Icon(Icons.receipt_long, size: 64, color: Color(0xFF4A6572)),
                   SizedBox(height: 16),
-                  Text('暂无运行日志', style: TextStyle(color: Color(0xFF4A6572))),
+                  Text('No run logs', style: TextStyle(color: Color(0xFF4A6572))),
                   SizedBox(height: 8),
                   Text(
-                    '运行脚本后会自动保存日志',
+                    'Logs are saved after running a script',
                     style: TextStyle(color: Color(0xFF4A6572), fontSize: 12),
                   ),
                 ],
@@ -880,12 +880,12 @@ class _ScriptLogPageState extends ConsumerState<ScriptLogPage> {
   }
 
   Widget _buildLogCard(Map<String, String> log) {
-    final name = log['name'] ?? '未知';
-    final scriptName = log['scriptName'] ?? '未知';
+    final name = log['name'] ?? 'Unknown';
+    final scriptName = log['scriptName'] ?? 'Unknown';
     final time = log['time'] ?? '';
     final output = log['output'] ?? '';
 
-    // 格式化时间显示
+    // Implementation detail.
     String formattedTime = '';
     try {
       final dt = DateTime.parse(time);
@@ -946,7 +946,7 @@ class _ScriptLogPageState extends ConsumerState<ScriptLogPage> {
               Row(
                 children: [
                   Text(
-                    '脚本: $scriptName',
+                    'Script: $scriptName',
                     style: const TextStyle(color: Color(0xFF4A6572), fontSize: 12),
                   ),
                   const Spacer(),
@@ -987,7 +987,7 @@ class _ScriptLogPageState extends ConsumerState<ScriptLogPage> {
   }
 
   void _showLogDetail(Map<String, String> log) {
-    final name = log['name'] ?? '未知';
+    final name = log['name'] ?? 'Unknown';
     final output = log['output'] ?? '';
 
     showModalBottomSheet(
@@ -1028,11 +1028,11 @@ class _ScriptLogPageState extends ConsumerState<ScriptLogPage> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.copy),
-                    tooltip: '复制日志',
+                    tooltip: 'Copy log',
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: output));
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('✅ 日志已复制到剪贴板')),
+                        const SnackBar(content: Text('✅ Log copied to clipboard')),
                       );
                     },
                   ),

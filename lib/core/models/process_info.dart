@@ -1,23 +1,23 @@
-/// 进程信息数据模型
+/// process information data model
 
-/// 进程信息
+/// process information
 class ProcessInfo {
-  /// 进程 ID
+  /// process  ID
   final int pid;
 
-  /// 包名
+  /// Documentation.
   final String packageName;
 
-  /// 进程名称
+  /// process name
   final String processName;
 
-  /// 用户 ID
+  /// User ID
   final int uid;
 
-  /// 是否为系统进程
+  /// whether  to Systemprocess
   final bool isSystem;
 
-  /// 进程图标路径 (可选)
+  /// Documentation.
   final String? iconPath;
 
   const ProcessInfo({
@@ -47,12 +47,12 @@ class ProcessInfo {
     );
   }
 
-  /// 显示名称 (优先使用 processName，即 APP 名称)
+  /// Documentation.
   String get displayName => processName.isNotEmpty && processName != packageName
       ? processName
       : packageName;
 
-  /// 简短显示名称 (取最后一段)
+  /// Documentation.
   String get shortName {
     final parts = packageName.split('.');
     return parts.isNotEmpty ? parts.last : packageName;

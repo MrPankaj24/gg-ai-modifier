@@ -1,22 +1,22 @@
-/// 地址输入组件
-/// 支持十六进制和十进制地址输入
+/// Documentation.
+/// Documentation.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/ffi/memory_types.dart';
 
-/// 地址输入组件
+/// Documentation.
 class AddressInput extends StatefulWidget {
-  /// 标签文本
+  /// Documentation.
   final String? label;
 
-  /// 地址值变化回调
+  /// Documentation.
   final ValueChanged<int>? onAddressChanged;
 
-  /// 初始地址值
+  /// Documentation.
   final int? initialValue;
 
-  /// 是否只读
+  /// Documentation.
   final bool readOnly;
 
   const AddressInput({
@@ -84,7 +84,7 @@ class _AddressInputState extends State<AddressInput> {
           ),
         Row(
           children: [
-            // 十六进制/十进制切换
+            // Implementation detail.
             Container(
               decoration: BoxDecoration(
                 color: const Color(0xFFFFFFFF),
@@ -109,7 +109,7 @@ class _AddressInputState extends State<AddressInput> {
               ),
             ),
             const SizedBox(width: 8),
-            // 地址输入框
+            // Implementation detail.
             Expanded(
               child: TextField(
                 controller: _controller,

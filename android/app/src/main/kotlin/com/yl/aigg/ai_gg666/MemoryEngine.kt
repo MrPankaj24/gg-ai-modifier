@@ -7,12 +7,12 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 /**
- * 内存引擎 v20.0 - Root Scanner 版
+ * Implementation detail.
  *
- * - 使用独立的 root 可执行文件进行内存扫描
- * - C++ process_vm_readv/writev 系统调用（有 CAP_SYS_PTRACE）
- * - 2MB 高速缓冲区滑动窗口
- * - 异步执行，不阻塞 UI 线程
+ * Implementation detail.
+ * Implementation detail.
+ * Implementation detail.
+ * Implementation detail.
  */
 object MemoryEngine {
 
@@ -35,33 +35,33 @@ object MemoryEngine {
     }
 
     fun isNativeAvailable(): Boolean = true
-    
+
     /**
-     * 设置 Application Context（用于初始化 RootScanner）
+     * Implementation detail.
      */
     fun setContext(context: Context) {
         appContext = context
     }
 
-    // ==================== 进程管理 ====================
+    // Implementation detail.
 
     fun attachProcess(pid: Int): Boolean {
         return try {
-            // 检查 Root 权限
+            // Implementation detail.
             if (!RootManager.checkRootAccess()) {
                 Log.e(TAG, "❌ No root access")
                 return false
             }
-            
-            // 初始化 RootScanner
+
+            // Implementation detail.
             val ctx = appContext
             if (ctx != null) {
                 runBlocking {
                     RootScanner.initialize(ctx)
                 }
             }
-            
-            // 解析 maps
+
+            // Implementation detail.
             activeRegions = getRegions(pid)
             if (activeRegions.isEmpty()) {
                 Log.e(TAG, "Process $pid has no accessible regions")
@@ -91,7 +91,7 @@ object MemoryEngine {
 
     fun getAttachedPid(): Int? = attachedPid
 
-    // ==================== 内存段解析（通过 Root Shell 一次性读取） ====================
+    // Implementation detail.
 
     data class MemRegion(val startAddr: Long, val endAddr: Long, val priority: Int)
 
@@ -139,9 +139,9 @@ object MemoryEngine {
         }
     }
 
-    // ==================== 辅助：获取地址和大小数组（已废弃，保留用于兼容） ====================
+    // Implementation detail.
 
-    // ==================== 搜索 ====================
+    // ==================== Search ====================
 
     fun searchExact(value: Any, type: String): List<Map<String, Any>> {
         val pid = attachedPid ?: return emptyList()
@@ -153,12 +153,12 @@ object MemoryEngine {
 
             val targetHex = targetBytes.joinToString(" ") { String.format("%02X", it) }
             val totalMB = activeRegions.sumOf { it.endAddr - it.startAddr } / 1024 / 1024
-            Log.d(TAG, "🎯 搜索值: $value, 类型: $type, Hex: [$targetHex]")
-            Log.d(TAG, "📊 段数: ${activeRegions.size}, 总体积: ${totalMB}MB")
+            Log.d(TAG, "🎯 Searchvalue : $value, Type: $type, Hex: [$targetHex]")
+            Log.d(TAG, "📊 segments : ${activeRegions.size}, total size: ${totalMB}MB")
 
             val startTime = System.currentTimeMillis()
 
-            // 使用 RootScanner（异步执行）
+            // Implementation detail.
             val addresses = runBlocking {
                 RootScanner.searchExact(pid, activeRegions, typeSize, targetBytes)
             }
@@ -186,7 +186,7 @@ object MemoryEngine {
             val addresses = runBlocking {
                 RootScanner.searchRange(pid, activeRegions, typeSize, minValue, maxValue)
             }
-            
+
             val placeholder: Any = if (type == "float") minValue.toFloat() else minValue
             val results = addresses.map { addr -> createResultMap(addr, placeholder, type) }
             enrichWithMachineCode(pid, results)
@@ -202,7 +202,7 @@ object MemoryEngine {
             val typeSize = getTypeSize(type)
             val targetBytes = valueToBytes(value, type) ?: return emptyList()
 
-            // 使用模糊搜索的逻辑来过滤
+            // Implementation detail.
             val results = mutableListOf<MutableMap<String, Any>>()
             for (addr in previousAddresses) {
                 val bytes = runBlocking {
@@ -234,13 +234,13 @@ object MemoryEngine {
             val typeSize = getTypeSize(type)
             val addresses = lastSnapshot.keys.toList()
             val oldValues = ByteArray(addresses.size * typeSize)
-            
-            // 构建旧值数组
+
+            // Implementation detail.
             addresses.forEachIndexed { index, addr ->
                 val bytes = lastSnapshot[addr] ?: return@forEachIndexed
                 System.arraycopy(bytes, 0, oldValues, index * typeSize, typeSize)
             }
-            
+
             val mode = when (comparison) {
                 "changed" -> 0
                 "unchanged" -> 1
@@ -248,11 +248,11 @@ object MemoryEngine {
                 "decreased" -> 3
                 else -> 0
             }
-            
+
             val resultAddrs = runBlocking {
                 RootScanner.searchFuzzy(pid, addresses, oldValues, mode, typeSize)
             }
-            
+
             val results = resultAddrs.map { addr ->
                 val bytes = runBlocking {
                     RootScanner.readMemory(pid, addr, typeSize)
@@ -270,7 +270,7 @@ object MemoryEngine {
         val pid = attachedPid ?: return emptyList()
         if (activeRegions.isEmpty()) return emptyList()
 
-        // 检测是否为地址格式（0x开头的单个十六进制数）
+        // Implementation detail.
         val addrLong = parseAddress(pattern)
         if (addrLong != null) {
             return readAddressValues(pid, addrLong)
@@ -280,7 +280,7 @@ object MemoryEngine {
             val (patternBytes, maskBytes) = parseAobPattern(pattern)
             if (patternBytes.isEmpty()) return emptyList()
 
-            // 如果外部传了 mask，覆盖内部生成的
+            // Implementation detail.
             val finalMask = if (mask != null) {
                 ByteArray(patternBytes.size) { i ->
                     if (i < mask.length && mask[i] == '?') 0.toByte() else maskBytes[i]
@@ -298,7 +298,7 @@ object MemoryEngine {
                 if (ctx != null) aobDatabase[addr] = AobSignature(addr, pattern, ctx, 16)
                 val mc = runBlocking { RootScanner.readMemory(pid, addr, 8) }
                 val mcStr = mc?.joinToString(" ") { String.format("%02X", it) } ?: ""
-                // 读取该地址的实际值（dword）
+                // Implementation detail.
                 val valBytes = runBlocking { RootScanner.readMemory(pid, addr, 4) }
                 val actualValue: Any = if (valBytes != null) bytesToValue(valBytes, "dword") ?: 0 else 0
                 mapOf("address" to "0x${addr.toString(16).uppercase()}", "addressInt" to addr,
@@ -308,24 +308,24 @@ object MemoryEngine {
         } catch (e: Exception) { emptyList() }
     }
 
-    // 解析地址格式，返回 Long 或 null
+    // Implementation detail.
     private fun parseAddress(input: String): Long? {
         val s = input.trim()
         return when {
             s.startsWith("0x", ignoreCase = true) -> s.substring(2).toLongOrNull(16)
-            // 纯十六进制且长度>=6（至少3字节地址）也视为地址
+            // Implementation detail.
             s.length >= 6 && s.all { it.isDigit() || it in "abcdefABCDEF" } -> s.toLongOrNull(16)
             else -> null
         }
     }
 
-    // 读取指定地址处的各种类型值
+    // Implementation detail.
     private fun readAddressValues(pid: Int, address: Long): List<Map<String, Any>> {
         val results = mutableListOf<Map<String, Any>>()
-        // 读取机器码
+        // read Machine code
         val mc = runBlocking { RootScanner.readMemory(pid, address, 8) }
         val mcStr = mc?.joinToString(" ") { String.format("%02X", it) } ?: ""
-        // 读取多种类型的值
+        // Implementation detail.
         val types = listOf("dword" to 4, "float" to 4, "double" to 8, "word" to 2, "byte" to 1)
         for ((type, size) in types) {
             try {
@@ -377,7 +377,7 @@ object MemoryEngine {
         } catch (e: Exception) { emptyList() }
     }
 
-    // ==================== 内存读写 ====================
+    // Implementation detail.
 
     fun readMemory(address: Long, type: String): Any? {
         val pid = attachedPid ?: return null
@@ -393,7 +393,7 @@ object MemoryEngine {
         }
     }
 
-    // 兼容旧调用
+    // Implementation detail.
     fun readMemory(address: Int, type: String): Any? = readMemory(address.toLong(), type)
 
     fun writeMemory(address: Long, value: Any, type: String): Boolean {
@@ -409,7 +409,7 @@ object MemoryEngine {
         }
     }
 
-    // 兼容旧调用
+    // Implementation detail.
     fun writeMemory(address: Int, value: Any, type: String): Boolean = writeMemory(address.toLong(), value, type)
 
     fun writeBatch(requests: List<Map<String, Any>>): Boolean {
@@ -433,7 +433,7 @@ object MemoryEngine {
         } catch (e: Exception) { emptyMap() }
     }
 
-    // 兼容旧调用
+    // Implementation detail.
     fun analyzeMemoryRegion(address: Int, range: Int): Map<String, Any> = analyzeMemoryRegion(address.toLong(), range)
 
     private fun searchAllValues(type: String): List<Map<String, Any>> {
@@ -446,13 +446,13 @@ object MemoryEngine {
             val addresses = runBlocking {
                 RootScanner.searchRange(pid, activeRegions, typeSize, Long.MIN_VALUE, Long.MAX_VALUE)
             }
-            
+
             val placeholder: Any = if (type == "float") 0.0f else if (type == "double") 0.0 else 0
             addresses.map { addr -> createResultMap(addr, placeholder, type) }
         } catch (e: Exception) { emptyList() }
     }
 
-    // ==================== 快照 ====================
+    // Implementation detail.
 
     private fun saveSnapshot(results: List<Map<String, Any>>, type: String) {
         val pid = attachedPid ?: return
@@ -470,19 +470,19 @@ object MemoryEngine {
         lastSnapshot = snapshot
     }
 
-    // ==================== 工具函数 ====================
+    // Implementation detail.
 
-    // 解析 AOB 特征码，返回 Pair(patternBytes, maskBytes)，mask=1精确匹配，0=通配
+    // Implementation detail.
     private fun parseAobPattern(input: String): Pair<ByteArray, ByteArray> {
         var raw = input.trim()
-        // 去除 0x/0X 前缀
+        // Implementation detail.
         if (raw.startsWith("0x", ignoreCase = true)) raw = raw.substring(2)
 
-        // 按空格分割，如果没有空格则每2字符分割（但 ?? 需特殊处理）
+        // Implementation detail.
         val tokens: List<String> = if (raw.contains(" ")) {
             raw.split("\\s+".toRegex()).filter { it.isNotEmpty() }
         } else {
-            // 连续格式：先把 ?? 提出来，再每2字符分割
+            // Implementation detail.
             val result = mutableListOf<String>()
             var j = 0
             while (j < raw.length) {
@@ -493,7 +493,7 @@ object MemoryEngine {
                     result.add(raw.substring(j, j + 2))
                     j += 2
                 } else {
-                    j++ // 跳过奇数末尾
+                    j++ // Skip the final odd digit
                 }
             }
             result
@@ -504,10 +504,10 @@ object MemoryEngine {
         for (token in tokens) {
             if (token == "??") {
                 patternBytes.add(0)
-                maskBytes.add(0) // 通配
+                maskBytes.add(0) // Wildcard
             } else {
                 patternBytes.add(token.toInt(16).toByte())
-                maskBytes.add(1) // 精确匹配
+                maskBytes.add(1) // Exact match
             }
         }
         return Pair(patternBytes.toByteArray(), maskBytes.toByteArray())
@@ -566,7 +566,7 @@ object MemoryEngine {
         "value" to value, "type" to type, "isFavorite" to false, "isFrozen" to false
     )
 
-    // 为搜索结果批量读取机器码（地址处的原始字节）
+    // Implementation detail.
     private fun enrichWithMachineCode(pid: Int, results: List<MutableMap<String, Any>>) {
         for (r in results) {
             val addr = r["addressInt"] as? Long ?: continue

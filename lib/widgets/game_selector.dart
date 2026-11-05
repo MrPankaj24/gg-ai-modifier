@@ -1,24 +1,24 @@
-/// 游戏选择器组件
-/// 显示运行中的进程列表，允许用户选择目标游戏
+/// Documentation.
+/// Documentation.
 
 import 'package:flutter/material.dart';
 import '../core/models/process_info.dart';
 
-/// 游戏选择器组件
+/// Documentation.
 class GameSelector extends StatefulWidget {
-  /// 进程列表
+  /// Documentation.
   final List<ProcessInfo> processes;
 
-  /// 选中回调
+  /// Documentation.
   final ValueChanged<ProcessInfo>? onSelected;
 
-  /// 当前选中的进程
+  /// Documentation.
   final ProcessInfo? selectedProcess;
 
-  /// 是否正在加载
+  /// Documentation.
   final bool isLoading;
 
-  /// 刷新回调
+  /// Documentation.
   final VoidCallback? onRefresh;
 
   const GameSelector({
@@ -57,13 +57,13 @@ class _GameSelectorState extends State<GameSelector> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // 搜索栏
+        // Implementation detail.
         Padding(
           padding: const EdgeInsets.all(12),
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: '搜索游戏...',
+              hintText: 'Search games...',
               prefixIcon: const Icon(Icons.search, size: 16),
               suffixIcon: widget.onRefresh != null
                   ? IconButton(
@@ -80,7 +80,7 @@ class _GameSelectorState extends State<GameSelector> {
           ),
         ),
 
-        // 当前选中
+        // Implementation detail.
         if (widget.selectedProcess != null)
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -124,7 +124,7 @@ class _GameSelectorState extends State<GameSelector> {
 
         const SizedBox(height: 8),
 
-        // 进程列表
+        // Implementation detail.
         if (widget.isLoading)
           const Padding(
             padding: EdgeInsets.all(24),
@@ -133,7 +133,7 @@ class _GameSelectorState extends State<GameSelector> {
         else if (_filteredProcesses.isEmpty)
           const Padding(
             padding: EdgeInsets.all(24),
-            child: Text('未找到进程', style: TextStyle(color: Color(0xFF4A6572))),
+            child: Text('No processes found', style: TextStyle(color: Color(0xFF4A6572))),
           )
         else
           SizedBox(
@@ -160,7 +160,7 @@ class _GameSelectorState extends State<GameSelector> {
                   ),
                   trailing: process.isSystem
                       ? const Chip(
-                          label: Text('系统', style: TextStyle(fontSize: 10)),
+                          label: Text('System', style: TextStyle(fontSize: 10)),
                           backgroundColor: Colors.orange,
                           padding: EdgeInsets.zero,
                         )

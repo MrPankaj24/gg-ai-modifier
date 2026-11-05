@@ -1,7 +1,7 @@
-/// 本地存储服务
+/// Documentation.
 ///
-/// 使用 Hive 进行本地数据持久化
-/// 支持 Sessions、Messages、Bookmarks 结构化存储
+/// Documentation.
+/// Documentation.
 
 import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -13,7 +13,7 @@ import '../core/models/memory_result.dart';
 import '../core/models/bookmark_model.dart';
 import '../core/models/skill_model.dart';
 
-/// 存储服务
+/// Documentation.
 class StorageService {
   static const String _llmConfigBox = 'llm_config';
   static const String _chatHistoryBox = 'chat_history';
@@ -27,7 +27,7 @@ class StorageService {
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
 
-  /// 初始化存储
+  /// Documentation.
   Future<void> initialize() async {
     if (_isInitialized) return;
 
@@ -44,15 +44,15 @@ class StorageService {
     _isInitialized = true;
   }
 
-  // ==================== LLM 配置 ====================
+  // Implementation detail.
 
-  /// 保存 LLM 配置
+  /// Documentation.
   Future<void> saveLlmConfig(LlmConfig config) async {
     final box = Hive.box(_llmConfigBox);
     await box.put('current', jsonEncode(config.toJson()));
   }
 
-  /// 获取 LLM 配置
+  /// Documentation.
   LlmConfig? getLlmConfig() {
     final box = Hive.box(_llmConfigBox);
     final json = box.get('current') as String?;
@@ -60,16 +60,16 @@ class StorageService {
     return LlmConfig.fromJson(jsonDecode(json) as Map<String, dynamic>);
   }
 
-  // ==================== 聊天历史 (旧版兼容) ====================
+  // Implementation detail.
 
-  /// 保存聊天历史
+  /// Documentation.
   Future<void> saveChatHistory(List<ChatMessage> messages) async {
     final box = Hive.box(_chatHistoryBox);
     final jsonList = messages.map((m) => m.toJson()).toList();
     await box.put('history', jsonEncode(jsonList));
   }
 
-  /// 获取聊天历史
+  /// Documentation.
   List<ChatMessage> getChatHistory() {
     final box = Hive.box(_chatHistoryBox);
     final json = box.get('history') as String?;
@@ -81,21 +81,21 @@ class StorageService {
     }).toList();
   }
 
-  /// 清空聊天历史
+  /// Documentation.
   Future<void> clearChatHistory() async {
     final box = Hive.box(_chatHistoryBox);
     await box.delete('history');
   }
 
-  // ==================== 会话管理 (Sessions) ====================
+  // Implementation detail.
 
-  /// 保存会话
+  /// Documentation.
   Future<void> saveSession(ChatSession session) async {
     final box = Hive.box(_sessionsBox);
     await box.put(session.id, jsonEncode(session.toJson()));
   }
 
-  /// 获取所有会话（按更新时间倒序）
+  /// Documentation.
   List<ChatSession> getAllSessions() {
     final box = Hive.box(_sessionsBox);
     final sessions = box.values.map((item) {
@@ -103,12 +103,12 @@ class StorageService {
       return ChatSession.fromJson(jsonDecode(json) as Map<String, dynamic>);
     }).toList();
 
-    // 按更新时间倒序排列
+    // Implementation detail.
     sessions.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     return sessions;
   }
 
-  /// 获取单个会话
+  /// Documentation.
   ChatSession? getSession(String id) {
     final box = Hive.box(_sessionsBox);
     final json = box.get(id) as String?;
@@ -116,19 +116,19 @@ class StorageService {
     return ChatSession.fromJson(jsonDecode(json) as Map<String, dynamic>);
   }
 
-  /// 删除会话
+  /// Documentation.
   Future<void> deleteSession(String id) async {
     final box = Hive.box(_sessionsBox);
     await box.delete(id);
   }
 
-  /// 清空所有会话
+  /// Documentation.
   Future<void> clearAllSessions() async {
     final box = Hive.box(_sessionsBox);
     await box.clear();
   }
 
-  /// 向会话添加消息
+  /// Documentation.
   Future<void> addMessageToSession(
     String sessionId,
     ChatMessage message,
@@ -144,7 +144,7 @@ class StorageService {
     await saveSession(updatedSession);
   }
 
-  /// 获取会话消息（剔除海量地址数据，只保留文本消息）
+  /// Documentation.
   List<ChatMessage> getSessionMessages(
     String sessionId, {
     bool excludeAddressData = true,
@@ -154,28 +154,28 @@ class StorageService {
 
     if (!excludeAddressData) return session.messages;
 
-    // 过滤掉包含大量地址数据的消息（节省存储空间）
+    // Implementation detail.
     return session.messages.where((msg) {
-      // 保留用户消息和 AI 文本回复
+      // Implementation detail.
       if (msg.isUser || msg.type == MessageType.text) return true;
-      // 保留函数调用信息（但不保留大量结果数据）
+      // Implementation detail.
       if (msg.type == MessageType.functionCall) return true;
-      // 函数结果消息如果太长则截断
+      // Implementation detail.
       if (msg.type == MessageType.functionResult && msg.content.length > 1000)
         return false;
       return true;
     }).toList();
   }
 
-  // ==================== 脚本管理 ====================
+  // Implementation detail.
 
-  /// 保存脚本
+  /// SaveScript
   Future<void> saveScript(ScriptModel script) async {
     final box = Hive.box(_scriptsBox);
     await box.put(script.id, jsonEncode(script.toJson()));
   }
 
-  /// 获取所有脚本
+  /// Documentation.
   List<ScriptModel> getAllScripts() {
     final box = Hive.box(_scriptsBox);
     return box.values.map((item) {
@@ -184,7 +184,7 @@ class StorageService {
     }).toList();
   }
 
-  /// 获取脚本
+  /// Documentation.
   ScriptModel? getScript(String id) {
     final box = Hive.box(_scriptsBox);
     final json = box.get(id) as String?;
@@ -192,21 +192,21 @@ class StorageService {
     return ScriptModel.fromJson(jsonDecode(json) as Map<String, dynamic>);
   }
 
-  /// 删除脚本
+  /// DeleteScript
   Future<void> deleteScript(String id) async {
     final box = Hive.box(_scriptsBox);
     await box.delete(id);
   }
 
-  // ==================== 收藏地址 ====================
+  // Implementation detail.
 
-  /// 保存收藏地址
+  /// Documentation.
   Future<void> saveFavorite(MemoryResult result) async {
     final box = Hive.box(_favoritesBox);
     await box.put(result.address, jsonEncode(result.toJson()));
   }
 
-  /// 获取所有收藏地址
+  /// Documentation.
   List<MemoryResult> getFavorites() {
     final box = Hive.box(_favoritesBox);
     return box.values.map((item) {
@@ -215,21 +215,21 @@ class StorageService {
     }).toList();
   }
 
-  /// 删除收藏地址
+  /// Documentation.
   Future<void> deleteFavorite(String address) async {
     final box = Hive.box(_favoritesBox);
     await box.delete(address);
   }
 
-  // ==================== 书签管理 (Bookmarks) ====================
+  // Implementation detail.
 
-  /// 保存书签
+  /// Documentation.
   Future<void> saveBookmark(BookmarkModel bookmark) async {
     final box = Hive.box(_bookmarksBox);
     await box.put(bookmark.id, jsonEncode(bookmark.toJson()));
   }
 
-  /// 获取所有书签（按更新时间倒序）
+  /// Documentation.
   List<BookmarkModel> getAllBookmarks() {
     final box = Hive.box(_bookmarksBox);
     final bookmarks = box.values.map((item) {
@@ -241,14 +241,14 @@ class StorageService {
     return bookmarks;
   }
 
-  /// 获取指定游戏的书签
+  /// Documentation.
   List<BookmarkModel> getBookmarksByPackage(String packageName) {
     return getAllBookmarks()
         .where((b) => b.packageName == packageName)
         .toList();
   }
 
-  /// 获取单个书签
+  /// Documentation.
   BookmarkModel? getBookmark(String id) {
     final box = Hive.box(_bookmarksBox);
     final json = box.get(id) as String?;
@@ -256,13 +256,13 @@ class StorageService {
     return BookmarkModel.fromJson(jsonDecode(json) as Map<String, dynamic>);
   }
 
-  /// 删除书签
+  /// Documentation.
   Future<void> deleteBookmark(String id) async {
     final box = Hive.box(_bookmarksBox);
     await box.delete(id);
   }
 
-  /// 更新书签值
+  /// Documentation.
   Future<void> updateBookmarkValue(String id, dynamic newValue) async {
     final bookmark = getBookmark(id);
     if (bookmark == null) return;
@@ -274,7 +274,7 @@ class StorageService {
     await saveBookmark(updated);
   }
 
-  /// 切换书签冻结状态
+  /// Documentation.
   Future<void> toggleBookmarkFreeze(String id, dynamic freezeValue) async {
     final bookmark = getBookmark(id);
     if (bookmark == null) return;
@@ -287,35 +287,35 @@ class StorageService {
     await saveBookmark(updated);
   }
 
-  // ==================== 通用设置 ====================
+  // Implementation detail.
 
-  /// 保存设置
+  /// SaveSettings
   Future<void> saveSetting(String key, dynamic value) async {
     final box = Hive.box(_settingsBox);
     await box.put(key, value);
   }
 
-  /// 获取设置
+  /// Documentation.
   dynamic getSetting(String key, {dynamic defaultValue}) {
     final box = Hive.box(_settingsBox);
     return box.get(key, defaultValue: defaultValue);
   }
 
-  /// 删除设置
+  /// DeleteSettings
   Future<void> deleteSetting(String key) async {
     final box = Hive.box(_settingsBox);
     await box.delete(key);
   }
 
-  // ==================== Skill 管理 ====================
+  // Implementation detail.
 
-  /// 保存 Skill
+  /// Save Skill
   Future<void> saveSkill(SkillModel skill) async {
     final box = Hive.box(_skillsBox);
     await box.put(skill.id, jsonEncode(skill.toJson()));
   }
 
-  /// 获取所有 Skill
+  /// Documentation.
   List<SkillModel> getAllSkills() {
     final box = Hive.box(_skillsBox);
     return box.values.map((item) {
@@ -324,12 +324,12 @@ class StorageService {
     }).toList();
   }
 
-  /// 获取已启用的 Skill 列表
+  /// Documentation.
   List<SkillModel> getEnabledSkills() {
     return getAllSkills().where((skill) => skill.isEnabled).toList();
   }
 
-  /// 获取单个 Skill
+  /// Documentation.
   SkillModel? getSkill(String id) {
     final box = Hive.box(_skillsBox);
     final json = box.get(id) as String?;
@@ -337,13 +337,13 @@ class StorageService {
     return SkillModel.fromJson(jsonDecode(json) as Map<String, dynamic>);
   }
 
-  /// 删除 Skill
+  /// Delete Skill
   Future<void> deleteSkill(String id) async {
     final box = Hive.box(_skillsBox);
     await box.delete(id);
   }
 
-  /// 切换 Skill 启用状态
+  /// Documentation.
   Future<void> toggleSkill(String id) async {
     final skill = getSkill(id);
     if (skill == null) return;
@@ -354,7 +354,7 @@ class StorageService {
     await saveSkill(updated);
   }
 
-  /// 释放资源
+  /// Documentation.
   Future<void> dispose() async {
     await Hive.close();
     _isInitialized = false;

@@ -28,8 +28,8 @@ class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
         appContext = applicationContext
-        
-        // 初始化 MemoryEngine 的 Context
+
+        // Implementation detail.
         MemoryEngine.setContext(applicationContext)
     }
 
@@ -37,32 +37,32 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
 
         channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.yl.aigg/bridge")
-        
-        // 首次启动时申请权限
+
+        // Implementation detail.
         requestAllPermissionsOnFirstLaunch()
 
-        // 检查启动时是否有页面参数
+        // Implementation detail.
         val startPage = intent?.getStringExtra("page")
         if (startPage != null) {
             pendingPage = startPage
         }
-        // 也检查 SharedPreferences
+        // Implementation detail.
         if (pendingPage == null) {
             val prefs = getSharedPreferences("gg_overlay", Context.MODE_PRIVATE)
             pendingPage = prefs.getString("pending_page", null)
             prefs.edit().remove("pending_page").apply()
         }
-        
+
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
-                // 获取悬浮窗传来的页面参数
+                // Implementation detail.
                 "getInitialPage" -> {
                     val page = pendingPage
                     pendingPage = null
                     result.success(page)
                 }
 
-                // 进程管理（后台线程执行，避免阻塞 UI）
+                // Implementation detail.
                 "getProcessList" -> {
                     Thread {
                         try {
@@ -99,25 +99,25 @@ class MainActivity : FlutterActivity() {
                     }.start()
                 }
                 "getAttachedPid" -> {
-                    // 优先从 SharedPreferences 读取（悬浮窗可能已附加）
+                    // Implementation detail.
                     val prefs = getSharedPreferences("gg_overlay", Context.MODE_PRIVATE)
                     val savedPid = prefs.getInt("attached_pid", -1)
                     val currentPid = MemoryEngine.getAttachedPid()
-                    
-                    // 如果有保存的 PID 且与当前不同，则重新附加
+
+                    // Implementation detail.
                     if (savedPid > 0 && currentPid != savedPid) {
                         try {
                             MemoryEngine.attachProcess(savedPid)
                         } catch (e: Exception) {
-                            // 附加失败，清除保存的信息
+                            // Implementation detail.
                             prefs.edit().clear().apply()
                         }
                     }
-                    
+
                     result.success(MemoryEngine.getAttachedPid())
                 }
 
-                // 内存搜索（全部在后台线程执行）
+                // Implementation detail.
                 "searchExact" -> {
                     val value = call.argument<Any>("value")
                     if (value == null) {
@@ -169,7 +169,7 @@ class MainActivity : FlutterActivity() {
                     }.start()
                 }
 
-                // 模糊搜索（未知值搜索）
+                // FuzzySearch (Unknownvalue Search)
                 "searchFuzzy" -> {
                     val comparison = call.argument<String>("comparison") ?: "changed"
                     val type = call.argument<String>("type") ?: "dword"
@@ -183,7 +183,7 @@ class MainActivity : FlutterActivity() {
                     }.start()
                 }
 
-                // 特征码搜索 (AOB Scan)
+                // SignatureSearch (AOB Scan)
                 "searchAob" -> {
                     val pattern = call.argument<String>("pattern")
                     if (pattern == null) {
@@ -201,7 +201,7 @@ class MainActivity : FlutterActivity() {
                     }.start()
                 }
 
-                // 特征码重定位（重启后使用）
+                // Implementation detail.
                 "relocateAob" -> {
                     Thread {
                         try {
@@ -213,7 +213,7 @@ class MainActivity : FlutterActivity() {
                     }.start()
                 }
 
-                // 内存读写（全部在后台线程执行）
+                // Implementation detail.
                 "readMemory" -> {
                     val address = call.argument<Int>("address")
                     if (address == null) {
@@ -259,7 +259,7 @@ class MainActivity : FlutterActivity() {
                     }.start()
                 }
 
-                // 内存冻结
+                // memoryFreeze
                 "freezeMemory" -> {
                     val address = call.argument<Int>("address")
                     val value = call.argument<Any>("value")
@@ -294,7 +294,7 @@ class MainActivity : FlutterActivity() {
                     }
                 }
 
-                // 内存区域（后台线程执行）
+                // Implementation detail.
                 "getMemoryRegions" -> {
                     Thread {
                         try {
@@ -322,7 +322,7 @@ class MainActivity : FlutterActivity() {
                     }.start()
                 }
 
-                // Root 权限
+                // Root Permission
                 "checkRootAccess" -> {
                     try {
                         result.success(RootManager.checkRootAccess())
@@ -338,12 +338,12 @@ class MainActivity : FlutterActivity() {
                     }
                 }
 
-                // Native 库状态检查
+                // Implementation detail.
                 "checkNativeStatus" -> {
                     result.success(MemoryEngine.isNativeAvailable())
                 }
 
-                // 悬浮窗
+                // Overlay
                 "startOverlay" -> {
                     try {
                         if (canDrawOverlays()) {
@@ -369,7 +369,7 @@ class MainActivity : FlutterActivity() {
                     result.success(canDrawOverlays())
                 }
 
-                // 打开 URL
+                // Implementation detail.
                 "openUrl" -> {
                     try {
                         val url = call.argument<String>("url") ?: ""
@@ -384,7 +384,7 @@ class MainActivity : FlutterActivity() {
                     }
                 }
 
-                // 清除悬浮窗保存的聊天记录
+                // Implementation detail.
                 "clearOverlayChats" -> {
                     try {
                         val prefs = getSharedPreferences("gg_overlay_chat", Context.MODE_PRIVATE)
@@ -395,7 +395,7 @@ class MainActivity : FlutterActivity() {
                     }
                 }
 
-                // 删除单条悬浮窗聊天记录
+                // Implementation detail.
                 "deleteOverlayChat" -> {
                     try {
                         val sessionId = call.argument<String>("sessionId") ?: ""
@@ -409,7 +409,7 @@ class MainActivity : FlutterActivity() {
                     }
                 }
 
-                // 获取悬浮窗保存的脚本运行日志
+                // Implementation detail.
                 "getOverlayScriptLogs" -> {
                     try {
                         val prefs = getSharedPreferences("gg_script_logs", Context.MODE_PRIVATE)
@@ -431,7 +431,7 @@ class MainActivity : FlutterActivity() {
                     }
                 }
 
-                // 保存 LLM 配置到 SharedPreferences（供悬浮窗读取）
+                // Implementation detail.
                 "saveLlmConfig" -> {
                     try {
                         val baseUrl = call.argument<String>("baseUrl") ?: ""
@@ -457,7 +457,7 @@ class MainActivity : FlutterActivity() {
                     }
                 }
 
-                // 获取悬浮窗保存的聊天记录
+                // Implementation detail.
                 "getOverlayChats" -> {
                     try {
                         val prefs = getSharedPreferences("gg_overlay_chat", Context.MODE_PRIVATE)
@@ -494,24 +494,24 @@ class MainActivity : FlutterActivity() {
                     }
                 }
 
-                // 执行 Lua 脚本
+                // execute  Lua Script
                 "executeLuaScript" -> {
                     val scriptId = call.argument<String>("scriptId") ?: ""
                     val scriptContent = call.argument<String>("scriptContent") ?: ""
 
                     if (scriptContent.isEmpty()) {
-                        result.error("EMPTY_SCRIPT", "脚本内容为空", null)
+                        result.error("EMPTY_SCRIPT", "Script content is empty", null)
                         return@setMethodCallHandler
                     }
 
-                    // 检查是否已附加进程
+                    // Implementation detail.
                     val pid = MemoryEngine.getAttachedPid()
                     if (pid == null) {
-                        result.error("NO_PROCESS", "请先附加游戏进程", null)
+                        result.error("NO_PROCESS", "Attach to a game process first", null)
                         return@setMethodCallHandler
                     }
 
-                    // 使用 LuaJ 在 JVM 中执行 Lua 脚本
+                    // use  LuaJ  in  JVM  in execute  Lua Script
                     Thread {
                         try {
                             LuaEngine.setActivity(this@MainActivity)
@@ -523,7 +523,7 @@ class MainActivity : FlutterActivity() {
                     }.start()
                 }
 
-                // 同步脚本到 SharedPreferences（供悬浮窗读取）
+                // Implementation detail.
                 "syncScripts" -> {
                     try {
                         val scriptsJson = call.argument<String>("scripts") ?: "[]"
@@ -535,7 +535,7 @@ class MainActivity : FlutterActivity() {
                     }
                 }
 
-                // 同步 Skill 到 SharedPreferences（供悬浮窗读取）
+                // Implementation detail.
                 "syncSkills" -> {
                     try {
                         val skillsJson = call.argument<String>("skills") ?: "[]"
@@ -547,14 +547,14 @@ class MainActivity : FlutterActivity() {
                     }
                 }
 
-                // 导出对话记录到文件
+                // Implementation detail.
                 "exportChatToFile" -> {
                     try {
                         val fileName = call.argument<String>("fileName") ?: "chat_export.md"
                         val content = call.argument<String>("content") ?: ""
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            // Android 10+ 使用 MediaStore API
+                            // Android 10+ use  MediaStore API
                             val values = android.content.ContentValues().apply {
                                 put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
                                 put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "text/markdown")
@@ -570,10 +570,10 @@ class MainActivity : FlutterActivity() {
                                 }
                                 result.success("Documents/AI-gg/$fileName")
                             } else {
-                                result.error("EXPORT_ERROR", "无法创建文件", null)
+                                result.error("EXPORT_ERROR", "Unable to create file", null)
                             }
                         } else {
-                            // Android 9 及以下使用传统方式
+                            // Implementation detail.
                             val externalDir = android.os.Environment.getExternalStorageDirectory()
                             val dir = java.io.File(externalDir, "AI-gg")
                             if (!dir.exists()) dir.mkdirs()
@@ -594,14 +594,14 @@ class MainActivity : FlutterActivity() {
                     }
                 }
 
-                // 导出 Skill 到文件
+                // Implementation detail.
                 "exportSkillToFile" -> {
                     try {
                         val fileName = call.argument<String>("fileName") ?: "skill.md"
                         val content = call.argument<String>("content") ?: ""
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            // Android 11+ 使用 MediaStore API，路径为 Documents/AI-gg/skills
+                            // Implementation detail.
                             val values = android.content.ContentValues().apply {
                                 put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
                                 put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "text/markdown")
@@ -617,10 +617,10 @@ class MainActivity : FlutterActivity() {
                                 }
                                 result.success("Documents/AI-gg/skills/$fileName")
                             } else {
-                                result.error("EXPORT_ERROR", "无法创建文件", null)
+                                result.error("EXPORT_ERROR", "Unable to create file", null)
                             }
                         } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-                            // Android 10 使用 MediaStore API，路径为 AI-gg/skills
+                            // Implementation detail.
                             val values = android.content.ContentValues().apply {
                                 put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
                                 put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "text/markdown")
@@ -636,10 +636,10 @@ class MainActivity : FlutterActivity() {
                                 }
                                 result.success("AI-gg/skills/$fileName")
                             } else {
-                                result.error("EXPORT_ERROR", "无法创建文件", null)
+                                result.error("EXPORT_ERROR", "Unable to create file", null)
                             }
                         } else {
-                            // Android 9 及以下使用传统方式
+                            // Implementation detail.
                             val externalDir = android.os.Environment.getExternalStorageDirectory()
                             val dir = java.io.File(externalDir, "AI-gg/skills")
                             if (!dir.exists()) dir.mkdirs()
@@ -666,44 +666,44 @@ class MainActivity : FlutterActivity() {
     }
 
     /**
-     * 通过 Root Shell 执行 Lua 脚本
-     * 将脚本写入临时文件，然后通过 luajit 执行
+     * Implementation detail.
+     * Implementation detail.
      */
     private fun executeLuaViaShell(scriptContent: String, pid: Int): String {
         return try {
-            // 将脚本写入临时文件
+            // Implementation detail.
             val scriptFile = java.io.File(cacheDir, "temp_script.lua")
             scriptFile.writeText(scriptContent, Charsets.UTF_8)
 
-            // 尝试使用 luajit 执行
+            // Implementation detail.
             val result = RootManager.executeRootCommand(
                 "luajit ${scriptFile.absolutePath} 2>&1"
             )
 
-            // 检查 luajit 是否可用（如果返回 "not found" 或类似错误，回退到直接执行）
+            // Implementation detail.
             if (result != null && result.isNotEmpty() &&
                 !result.contains("not found", ignoreCase = true) &&
                 !result.contains("No such file", ignoreCase = true)) {
                 result
             } else {
-                // luajit 不可用，解析脚本中的关键操作并直接执行
+                // Implementation detail.
                 val directResult = executeScriptDirectly(scriptContent, pid)
-                "⚠️ 设备未安装 luajit，使用内置解析器执行：\n\n$directResult"
+                "⚠️ luajit is not installed; using the built-in parser:\n\n$directResult"
             }
         } catch (e: Exception) {
-            "脚本执行异常: ${e.message}"
+            "Script execution error: ${e.message}"
         }
     }
 
     /**
-     * 直接解析并执行脚本中的关键操作
-     * 当 luajit 不可用时的备用方案
+     * Implementation detail.
+     * Implementation detail.
      */
     private fun executeScriptDirectly(scriptContent: String, pid: Int): String {
         val output = StringBuilder()
 
         try {
-            // 解析 gg.searchNumber 调用
+            // Implementation detail.
             val searchPattern = Regex("""gg\.searchNumber\((.+?),\s*(.+?)\)""")
             for (match in searchPattern.findAll(scriptContent)) {
                 val value = match.groupValues[1].trim().removeSurrounding("\"").removeSurrounding("'")
@@ -725,17 +725,17 @@ class MainActivity : FlutterActivity() {
                 }
 
                 val results = MemoryEngine.searchExact(numValue, type)
-                output.appendLine("搜索 $value ($type): 找到 ${results.size} 个结果")
+                output.appendLine("Search $value ($type): Found ${results.size} results")
 
                 for (r in results.take(10)) {
                     output.appendLine("  ${r["address"]} = ${r["value"]}")
                 }
                 if (results.size > 10) {
-                    output.appendLine("  ... 还有 ${results.size - 10} 个结果")
+                    output.appendLine("  ... more ${results.size - 10}  results")
                 }
             }
 
-            // 解析 gg.writeMemory 调用
+            // Implementation detail.
             val writePattern = Regex("""gg\.writeMemory\((.+?),\s*(.+?),\s*(.+?)\)""")
             for (match in writePattern.findAll(scriptContent)) {
                 val addrStr = match.groupValues[1].trim()
@@ -756,21 +756,21 @@ class MainActivity : FlutterActivity() {
                 }
 
                 val success = MemoryEngine.writeMemory(address, value, type)
-                output.appendLine("写入 ${addrStr} = $value ($type): ${if (success) "成功" else "失败"}")
+                output.appendLine("write  ${addrStr} = $value ($type): ${if (success) "succeeded " else "failed "}")
             }
 
-            // 解析 gg.toast 调用
+            // Implementation detail.
             val toastPattern = Regex("""gg\.toast\(["'](.+?)["']\)""")
             for (match in toastPattern.findAll(scriptContent)) {
                 output.appendLine("📢 ${match.groupValues[1]}")
             }
 
             if (output.isEmpty()) {
-                output.appendLine("脚本已解析，但未找到可直接执行的操作。")
-                output.appendLine("提示：请确保设备已安装 luajit 以执行完整 Lua 脚本。")
+                output.appendLine("Script parsed, but no directly executable operations were found.")
+                output.appendLine("Notice:Make sure luajit is installed to execute the full Lua script.")
             }
         } catch (e: Exception) {
-            output.appendLine("脚本解析异常: ${e.message}")
+            output.appendLine("Script parse error: ${e.message}")
         }
 
         return output.toString()
@@ -787,7 +787,7 @@ class MainActivity : FlutterActivity() {
         val page = intent.getStringExtra("page")
         if (page != null) {
             pendingPage = page
-            // 延迟通知 Flutter 端，确保 channel 就绪
+            // Implementation detail.
             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                 try {
                     if (::channel.isInitialized) {
@@ -798,10 +798,10 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    // ==================== 权限管理 ====================
+    // Implementation detail.
 
     /**
-     * 首次启动时申请所有必要权限
+     * Implementation detail.
      */
     private fun requestAllPermissionsOnFirstLaunch() {
         val prefs = getSharedPreferences("gg_permissions", Context.MODE_PRIVATE)
@@ -810,7 +810,7 @@ class MainActivity : FlutterActivity() {
         if (isFirstLaunch) {
             prefs.edit().putBoolean("is_first_launch", false).apply()
 
-            // 延迟执行，确保 Flutter 引擎就绪
+            // Implementation detail.
             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                 requestStoragePermissions()
                 requestOverlayPermission()
@@ -819,13 +819,13 @@ class MainActivity : FlutterActivity() {
     }
 
     /**
-     * 申请存储权限
+     * Implementation detail.
      */
     private fun requestStoragePermissions() {
         val permissions = mutableListOf<String>()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // Android 13+ 使用细粒度媒体权限
+            // Implementation detail.
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
                 != PackageManager.PERMISSION_GRANTED) {
                 permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
@@ -839,7 +839,7 @@ class MainActivity : FlutterActivity() {
                 permissions.add(Manifest.permission.READ_MEDIA_AUDIO)
             }
         } else {
-            // Android 12 及以下使用传统存储权限
+            // Implementation detail.
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
                 permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -860,7 +860,7 @@ class MainActivity : FlutterActivity() {
     }
 
     /**
-     * 申请悬浮窗权限
+     * Implementation detail.
      */
     private fun requestOverlayPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -875,7 +875,7 @@ class MainActivity : FlutterActivity() {
     }
 
     /**
-     * 权限申请结果回调
+     * Implementation detail.
      */
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -887,7 +887,7 @@ class MainActivity : FlutterActivity() {
             STORAGE_PERMISSION_REQUEST -> {
                 val allGranted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
                 if (allGranted) {
-                    // 存储权限已授予
+                    // Implementation detail.
                 }
             }
         }

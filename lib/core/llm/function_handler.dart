@@ -1,32 +1,32 @@
-/// Function Calling 处理器
+/// Documentation.
 ///
-/// 定义 AI 可调用的函数，并执行实际的内存操作
+/// Documentation.
 
 import '../ffi/native_bridge.dart';
 import '../models/memory_result.dart';
 
-/// Function Calling 处理器
+/// Documentation.
 class FunctionHandler {
   final NativeBridge _bridge;
 
   FunctionHandler({required NativeBridge bridge}) : _bridge = bridge;
 
-  /// 获取工具定义 (OpenAI Function Calling 格式)
+  /// Documentation.
   List<Map<String, dynamic>> getToolDefinitions() {
     return [
       {
         'type': 'function',
         'function': {
           'name': 'search_memory',
-          'description': '搜索进程内存中指定值。用于查找游戏数据（金币、血量等）的内存地址。',
+          'description': 'Searchprocess memory in a specified value in process memory, used to find game data (coins, health, etc.) of memoryaddress .',
           'parameters': {
             'type': 'object',
             'properties': {
-              'value': {'type': 'number', 'description': '要搜索的数值'},
+              'value': {'type': 'number', 'description': 'Search of Value'},
               'data_type': {
                 'type': 'string',
                 'enum': ['dword', 'qword', 'float', 'double', 'byte', 'word'],
-                'description': '数据类型，游戏金币/血量通常用 dword',
+                'description': 'data type; game coins and health usually use dword',
               },
             },
             'required': ['value', 'data_type'],
@@ -37,7 +37,7 @@ class FunctionHandler {
         'type': 'function',
         'function': {
           'name': 'search_fuzzy',
-          'description': '模糊搜索（未知值搜索）。用于搜索加密数值或变动血条。首次搜索会保存快照，后续搜索对比变化。',
+          'description': 'FuzzySearch (Unknownvalue Search).Used for encrypted or changing values. The first search saves a snapshot; later searches compare changes.',
           'parameters': {
             'type': 'object',
             'properties': {
@@ -54,12 +54,12 @@ class FunctionHandler {
                   'not_equal',
                 ],
                 'description':
-                    '对比操作：changed=已改变, unchanged=未改变, increased=增大了, decreased=减小了',
+                    'Comparison operations: changed, unchanged, increased, decreased',
               },
               'data_type': {
                 'type': 'string',
                 'enum': ['dword', 'qword', 'float', 'double', 'byte', 'word'],
-                'description': '数据类型',
+                'description': 'data type ',
               },
             },
             'required': ['comparison', 'data_type'],
@@ -70,13 +70,13 @@ class FunctionHandler {
         'type': 'function',
         'function': {
           'name': 'search_aob',
-          'description': '特征码搜索 (AOB Scan)。用于搜索特定字节模式，支持重启后重定位。',
+          'description': 'Signature search (AOB scan). Used to find specific byte patterns and supports relocation after restart.',
           'parameters': {
             'type': 'object',
             'properties': {
               'pattern': {
                 'type': 'string',
-                'description': '特征码模式 (如: "48 89 5C 24 ? 48 89 74 24")',
+                'description': 'Signature pattern (e.g.: "48 89 5C 24 ? 48 89 74 24")',
               },
             },
             'required': ['pattern'],
@@ -87,16 +87,16 @@ class FunctionHandler {
         'type': 'function',
         'function': {
           'name': 'write_memory',
-          'description': '向指定内存地址写入数值。用于修改游戏数据。',
+          'description': 'Write a value to a specified memory address to edit game data.',
           'parameters': {
             'type': 'object',
             'properties': {
               'address': {
                 'type': 'string',
-                'description': '内存地址 (十六进制，如 "0x7F3A4B2C80")',
+                'description': 'Memory address (hexadecimal, e.g. "0x7F3A4B2C80")',
               },
-              'value': {'type': 'number', 'description': '要写入的值'},
-              'data_type': {'type': 'string', 'description': '数据类型'},
+              'value': {'type': 'number', 'description': 'write  of value '},
+              'data_type': {'type': 'string', 'description': 'data type '},
             },
             'required': ['address', 'value', 'data_type'],
           },
@@ -106,13 +106,13 @@ class FunctionHandler {
         'type': 'function',
         'function': {
           'name': 'freeze_memory',
-          'description': '冻结内存地址的值（持续写入），防止游戏自动修改。',
+          'description': 'Freeze a memory address value (continuous writes) to prevent automatic game changes.',
           'parameters': {
             'type': 'object',
             'properties': {
-              'address': {'type': 'string', 'description': '内存地址'},
-              'value': {'type': 'number', 'description': '要冻结的值'},
-              'data_type': {'type': 'string', 'description': '数据类型'},
+              'address': {'type': 'string', 'description': 'memoryaddress '},
+              'value': {'type': 'number', 'description': 'Freeze of value '},
+              'data_type': {'type': 'string', 'description': 'data type '},
             },
             'required': ['address', 'value', 'data_type'],
           },
@@ -122,19 +122,19 @@ class FunctionHandler {
         'type': 'function',
         'function': {
           'name': 'get_process_list',
-          'description': '获取当前运行中的进程列表，用于选择要修改的游戏。',
+          'description': 'Get running processes so the user can select a game to edit.',
         },
       },
       {
         'type': 'function',
         'function': {
           'name': 'attach_process',
-          'description': '附加到目标游戏进程，附加后才能读写其内存。',
+          'description': 'Attach to a target game process; memory can be read and written after attachment.',
           'parameters': {
             'type': 'object',
             'properties': {
-              'pid': {'type': 'integer', 'description': '进程 ID'},
-              'package_name': {'type': 'string', 'description': '应用包名'},
+              'pid': {'type': 'integer', 'description': 'process  ID'},
+              'package_name': {'type': 'string', 'description': 'app package name'},
             },
             'required': ['package_name'],
           },
@@ -144,14 +144,14 @@ class FunctionHandler {
         'type': 'function',
         'function': {
           'name': 'analyze_memory_region',
-          'description': '分析指定地址周围的内存区域，帮助识别数据结构。',
+          'description': 'Analyze the memory region around an address to help identify its data structure.',
           'parameters': {
             'type': 'object',
             'properties': {
-              'address': {'type': 'string', 'description': '内存地址'},
+              'address': {'type': 'string', 'description': 'memoryaddress '},
               'range': {
                 'type': 'integer',
-                'description': '分析范围 (前后多少字节)，默认 256',
+                'description': 'Analyze a range (bytes before and after); default 256',
                 'default': 256,
               },
             },
@@ -162,7 +162,7 @@ class FunctionHandler {
     ];
   }
 
-  /// 执行函数调用
+  /// Documentation.
   Future<dynamic> executeFunction(
     String functionName,
     Map<String, dynamic> arguments,
@@ -185,11 +185,11 @@ class FunctionHandler {
       case 'analyze_memory_region':
         return _analyzeMemoryRegion(arguments);
       default:
-        return {'error': '未知函数: $functionName'};
+        return {'error': 'Unknown function : $functionName'};
     }
   }
 
-  /// 搜索内存
+  /// Searchmemory
   Future<Map<String, dynamic>> _searchMemory(Map<String, dynamic> args) async {
     final value = args['value'];
     final dataTypeStr = args['data_type'] as String;
@@ -201,11 +201,11 @@ class FunctionHandler {
       'success': true,
       'count': results.length,
       'results': results.take(100).map((r) => r.toJson()).toList(),
-      'message': results.isEmpty ? '未找到匹配的内存地址' : '找到 ${results.length} 个匹配地址',
+      'message': results.isEmpty ? 'No matching memory addresses' : 'Found ${results.length} matching addresses',
     };
   }
 
-  /// 模糊搜索
+  /// FuzzySearch
   Future<Map<String, dynamic>> _searchFuzzy(Map<String, dynamic> args) async {
     final comparison = args['comparison'] as String;
     final dataTypeStr = args['data_type'] as String;
@@ -217,11 +217,11 @@ class FunctionHandler {
       'success': true,
       'count': results.length,
       'results': results.take(100).map((r) => r.toJson()).toList(),
-      'message': results.isEmpty ? '未找到匹配的内存地址' : '找到 ${results.length} 个匹配地址',
+      'message': results.isEmpty ? 'No matching memory addresses' : 'Found ${results.length} matching addresses',
     };
   }
 
-  /// 特征码搜索
+  /// SignatureSearch
   Future<Map<String, dynamic>> _searchAob(Map<String, dynamic> args) async {
     final pattern = args['pattern'] as String;
 
@@ -231,18 +231,18 @@ class FunctionHandler {
       'success': true,
       'count': results.length,
       'results': results.take(100).map((r) => r.toJson()).toList(),
-      'message': results.isEmpty ? '未找到匹配的特征码' : '找到 ${results.length} 个匹配地址',
+      'message': results.isEmpty ? 'No matching signature' : 'Found ${results.length} matching addresses',
     };
   }
 
-  /// 写入内存
+  /// write memory
   Future<Map<String, dynamic>> _writeMemory(Map<String, dynamic> args) async {
     final addressStr = args['address'] as String;
     final value = args['value'];
     final dataTypeStr = args['data_type'] as String;
     final type = DataType.fromString(dataTypeStr);
 
-    // 解析十六进制地址
+    // Implementation detail.
     final address = int.parse(
       addressStr.replaceFirst('0x', '').replaceFirst('0X', ''),
       radix: 16,
@@ -252,13 +252,13 @@ class FunctionHandler {
 
     return {
       'success': success,
-      'message': success ? '写入成功' : '写入失败',
+      'message': success ? 'write succeeded ' : 'write failed ',
       'address': addressStr,
       'value': value,
     };
   }
 
-  /// 冻结内存
+  /// Freezememory
   Future<Map<String, dynamic>> _freezeMemory(Map<String, dynamic> args) async {
     final addressStr = args['address'] as String;
     final value = args['value'];
@@ -274,12 +274,12 @@ class FunctionHandler {
 
     return {
       'success': success,
-      'message': success ? '冻结成功' : '冻结失败',
+      'message': success ? 'Freezesucceeded ' : 'Freezefailed ',
       'address': addressStr,
     };
   }
 
-  /// 获取进程列表
+  /// Documentation.
   Future<Map<String, dynamic>> _getProcessList() async {
     final processes = await _bridge.getProcessList();
 
@@ -290,26 +290,26 @@ class FunctionHandler {
     };
   }
 
-  /// 附加进程
+  /// Attach Process
   Future<Map<String, dynamic>> _attachProcess(Map<String, dynamic> args) async {
     final pid = args['pid'] as int?;
     final packageName = args['package_name'] as String;
 
     if (pid == null) {
-      return {'success': false, 'message': '需要提供进程 ID (pid)'};
+      return {'success': false, 'message': 'need provide process  ID (pid)'};
     }
 
     final success = await _bridge.attachProcess(pid);
 
     return {
       'success': success,
-      'message': success ? '已附加到 $packageName (PID: $pid)' : '附加失败',
+      'message': success ? 'Attached to $packageName (PID: $pid)' : 'Attach failed',
       'pid': pid,
       'package_name': packageName,
     };
   }
 
-  /// 分析内存区域
+  /// Documentation.
   Future<Map<String, dynamic>> _analyzeMemoryRegion(
     Map<String, dynamic> args,
   ) async {

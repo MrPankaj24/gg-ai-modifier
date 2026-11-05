@@ -1,6 +1,6 @@
-/// 聊天消息数据模型
+/// Documentation.
 
-/// 消息角色
+/// Documentation.
 enum MessageRole {
   system('system'),
   user('user'),
@@ -10,39 +10,39 @@ enum MessageRole {
   const MessageRole(this.value);
 }
 
-/// 消息类型
+/// Documentation.
 enum MessageType {
-  text, // 普通文本
-  functionCall, // AI 调用函数
-  functionResult, // 函数执行结果
-  error, // 错误消息
-  system, // 系统消息
+  text, // Implementation detail.
+  functionCall, // Implementation detail.
+  functionResult, // Implementation detail.
+  error, // Implementation detail.
+  system, // Implementation detail.
 }
 
-/// 聊天消息
+/// Documentation.
 class ChatMessage {
-  /// 消息 ID
+  /// Documentation.
   final String id;
 
-  /// 消息角色
+  /// Documentation.
   final MessageRole role;
 
-  /// 消息内容
+  /// Documentation.
   final String content;
 
-  /// 消息类型
+  /// Documentation.
   final MessageType type;
 
-  /// 时间戳
+  /// Documentation.
   final DateTime timestamp;
 
-  /// 函数调用信息 (如果是 functionCall 类型)
+  /// Documentation.
   final FunctionCall? functionCall;
 
-  /// 函数执行结果 (如果是 functionResult 类型)
+  /// Documentation.
   final FunctionResult? functionResult;
 
-  /// 是否正在加载 (流式响应)
+  /// Documentation.
   final bool isLoading;
 
   ChatMessage({
@@ -78,13 +78,13 @@ class ChatMessage {
     );
   }
 
-  /// 是否为用户消息
+  /// Documentation.
   bool get isUser => role == MessageRole.user;
 
-  /// 是否为 AI 消息
+  /// Documentation.
   bool get isAssistant => role == MessageRole.assistant;
 
-  /// 是否为系统消息
+  /// Documentation.
   bool get isSystem => role == MessageRole.system;
 
   Map<String, dynamic> toJson() {
@@ -125,7 +125,7 @@ class ChatMessage {
     );
   }
 
-  /// 创建用户消息
+  /// Documentation.
   factory ChatMessage.user(String content, {String? id}) {
     return ChatMessage(
       id: id ?? _generateId(),
@@ -134,7 +134,7 @@ class ChatMessage {
     );
   }
 
-  /// 创建 AI 消息
+  /// Documentation.
   factory ChatMessage.assistant(String content, {String? id}) {
     return ChatMessage(
       id: id ?? _generateId(),
@@ -143,7 +143,7 @@ class ChatMessage {
     );
   }
 
-  /// 创建系统消息
+  /// Documentation.
   factory ChatMessage.system(String content, {String? id}) {
     return ChatMessage(
       id: id ?? _generateId(),
@@ -153,7 +153,7 @@ class ChatMessage {
     );
   }
 
-  /// 创建加载中消息
+  /// Documentation.
   factory ChatMessage.loading({String? id}) {
     return ChatMessage(
       id: id ?? _generateId(),
@@ -173,12 +173,12 @@ class ChatMessage {
   }
 }
 
-/// 函数调用信息
+/// Documentation.
 class FunctionCall {
-  /// 函数名称
+  /// Documentation.
   final String name;
 
-  /// 函数参数
+  /// Documentation.
   final Map<String, dynamic> arguments;
 
   const FunctionCall({required this.name, required this.arguments});
@@ -200,18 +200,18 @@ class FunctionCall {
   }
 }
 
-/// 函数执行结果
+/// Documentation.
 class FunctionResult {
-  /// 函数名称
+  /// Documentation.
   final String name;
 
-  /// 执行结果
+  /// execute results
   final dynamic result;
 
-  /// 是否成功
+  /// whether succeeded
   final bool success;
 
-  /// 错误信息
+  /// error information
   final String? error;
 
   const FunctionResult({

@@ -1,4 +1,4 @@
-/// 主页面 - 底部导航栏 + 滑动翻页
+/// Documentation.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,10 +10,10 @@ import '../settings/settings_page.dart';
 import '../process/process_selector.dart';
 import '../../main.dart';
 
-/// 当前选中的页面索引
+/// Documentation.
 final currentPageProvider = StateProvider<int>((ref) => 0);
 
-/// 主页面
+/// Documentation.
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
@@ -32,7 +32,7 @@ class _HomePageState extends ConsumerState<HomePage> with TickerProviderStateMix
     _pageController = PageController();
     _channel.setMethodCallHandler(_handleMethodCall);
     _getInitialPage();
-    // 检查是否有悬浮窗附加的进程
+    // Implementation detail.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       checkAttachedProcessOnStartup(ref);
     });
@@ -157,22 +157,22 @@ class _HomePageState extends ConsumerState<HomePage> with TickerProviderStateMix
           NavigationDestination(
             icon: Icon(Icons.history),
             selectedIcon: Icon(Icons.history, color: Color(0xFF3D5AFE)),
-            label: '对话记录',
+            label: 'Chat History',
           ),
           NavigationDestination(
             icon: Icon(Icons.extension),
             selectedIcon: Icon(Icons.extension, color: Color(0xFF3D5AFE)),
-            label: '插件中心',
+            label: 'Plugin Center',
           ),
           NavigationDestination(
             icon: Icon(Icons.code),
             selectedIcon: Icon(Icons.code, color: Color(0xFF3D5AFE)),
-            label: '脚本库',
+            label: 'Script Library',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings),
             selectedIcon: Icon(Icons.settings, color: Color(0xFF3D5AFE)),
-            label: '设置',
+            label: 'Settings',
           ),
         ],
       ),

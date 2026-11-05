@@ -1,21 +1,21 @@
-/// GG Modifier 应用入口
+/// Documentation.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'features/home/home_page.dart';
 
-/// 应用主题色（深蓝科技风）
-const Color kPrimaryColor = Color(0xFF3D5AFE);       // 亮蓝色
-const Color kSecondaryColor = Color(0xFF536DFE);     // 辅助蓝
-const Color kBackgroundColor = Color(0xFFF2F3F8);    // 浅灰蓝背景
-const Color kSurfaceColor = Color(0xFFFFFFFF);       // 纯白卡片
-const Color kErrorColor = Color(0xFFFF5252);         // 红色错误色
-const Color kTextPrimary = Color(0xFF213333);        // 深青灰文字
-const Color kTextSecondary = Color(0xFF4A6572);      // 辅助灰蓝文字
-const Color kAccentColor = Color(0xFF304FFE);        // 深蓝动作
-const Color kSplashColor = Color(0xFFE8EAF6);        // 淡蓝紫激活色
+/// Documentation.
+const Color kPrimaryColor = Color(0xFF3D5AFE); // Bright blue
+const Color kSecondaryColor = Color(0xFF536DFE); // Secondary blue
+const Color kBackgroundColor = Color(0xFFF2F3F8); // Light blue-gray background
+const Color kSurfaceColor = Color(0xFFFFFFFF); // White card
+const Color kErrorColor = Color(0xFFFF5252); // Red error color
+const Color kTextPrimary = Color(0xFF213333); // Dark teal-gray text
+const Color kTextSecondary = Color(0xFF4A6572); // Secondary gray-blue text
+const Color kAccentColor = Color(0xFF304FFE); // Dark blue action
+const Color kSplashColor = Color(0xFFE8EAF6); // Light blue-purple highlight
 
-/// GG Modifier 主应用
+/// Documentation.
 class GgModifierApp extends ConsumerWidget {
   const GgModifierApp({super.key});
 
@@ -89,8 +89,8 @@ class GgModifierApp extends ConsumerWidget {
   }
 }
 
-/// 奶油感点击包裹组件
-/// 按下时轻微缩放 + 背景色过渡，替代原生水波纹
+/// Documentation.
+/// Documentation.
 class MilkClickWrapper extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;

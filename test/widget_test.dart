@@ -21,7 +21,7 @@ void main() {
         child: GgModifierApp(),
       ),
     );
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     // Verify that the main navigation is rendered.
     expect(find.byType(NavigationBar), findsOneWidget);

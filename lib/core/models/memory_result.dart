@@ -1,6 +1,6 @@
-/// 内存搜索结果数据模型
+/// Memory searchresults data model
 
-/// 支持的数据类型
+/// support  of data type
 enum DataType {
   byte(1, 'Byte'),
   word(2, 'Word'),
@@ -15,7 +15,7 @@ enum DataType {
 
   const DataType(this.size, this.displayName);
 
-  /// 从字符串解析数据类型
+  /// Documentation.
   static DataType fromString(String value) {
     return DataType.values.firstWhere(
       (e) => e.name.toLowerCase() == value.toLowerCase(),
@@ -24,30 +24,30 @@ enum DataType {
   }
 }
 
-/// 内存搜索结果
+/// Memory searchresults
 class MemoryResult {
-  /// 内存地址 (十六进制)
+  /// Documentation.
   final String address;
 
-  /// 地址的数值表示
+  /// Documentation.
   final int addressInt;
 
-  /// 当前值
+  /// current value
   final dynamic value;
 
-  /// 数据类型
+  /// data type
   final DataType type;
 
-  /// 是否已收藏
+  /// Documentation.
   final bool isFavorite;
 
-  /// 是否已冻结
+  /// whether Freeze
   final bool isFrozen;
 
-  /// 冻结的值 (如果已冻结)
+  /// Freeze of value  (if Freeze)
   final dynamic frozenValue;
 
-  /// 所属内存区域描述
+  /// Documentation.
   final String? regionName;
 
   const MemoryResult({
@@ -83,7 +83,7 @@ class MemoryResult {
     );
   }
 
-  /// 转换为 JSON
+  /// Documentation.
   Map<String, dynamic> toJson() {
     return {
       'address': address,
@@ -97,7 +97,7 @@ class MemoryResult {
     };
   }
 
-  /// 从 JSON 创建
+  /// Documentation.
   factory MemoryResult.fromJson(Map<String, dynamic> json) {
     return MemoryResult(
       address: json['address'] as String,
@@ -126,33 +126,33 @@ class MemoryResult {
   int get hashCode => addressInt.hashCode;
 }
 
-/// 内存区域信息
+/// Documentation.
 class MemoryRegion {
-  /// 起始地址
+  /// Documentation.
   final int startAddress;
 
-  /// 结束地址
+  /// Documentation.
   final int endAddress;
 
-  /// 区域大小 (字节)
+  /// Documentation.
   final int size;
 
-  /// 权限 (rwxp)
+  /// permission (rwxp)
   final String permissions;
 
-  /// 是否可读
+  /// Documentation.
   final bool isReadable;
 
-  /// 是否可写
+  /// Documentation.
   final bool isWritable;
 
-  /// 是否可执行
+  /// Documentation.
   final bool isExecutable;
 
-  /// 是否为匿名映射
+  /// Documentation.
   final bool isAnonymous;
 
-  /// 映射名称
+  /// Documentation.
   final String? name;
 
   const MemoryRegion({
@@ -167,13 +167,13 @@ class MemoryRegion {
     this.name,
   });
 
-  /// 起始地址的十六进制字符串
+  /// Documentation.
   String get startHex => '0x${startAddress.toRadixString(16).toUpperCase()}';
 
-  /// 结束地址的十六进制字符串
+  /// Documentation.
   String get endHex => '0x${endAddress.toRadixString(16).toUpperCase()}';
 
-  /// 是否适合搜索 (可读的匿名区域)
+  /// Documentation.
   bool get isSearchable => isReadable && isAnonymous;
 
   Map<String, dynamic> toJson() {
@@ -205,15 +205,15 @@ class MemoryRegion {
   }
 }
 
-/// 写入请求
+/// Documentation.
 class WriteRequest {
-  /// 目标地址
+  /// Documentation.
   final int address;
 
-  /// 要写入的值
+  /// write  of value
   final dynamic value;
 
-  /// 数据类型
+  /// data type
   final DataType type;
 
   const WriteRequest({

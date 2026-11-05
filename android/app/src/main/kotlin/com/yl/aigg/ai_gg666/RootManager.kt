@@ -5,8 +5,8 @@ import java.io.DataOutputStream
 import java.io.InputStreamReader
 
 /**
- * Root 权限管理器
- * 使用持久化 su shell，只建立一次连接，避免重复弹窗
+ * Implementation detail.
+ * Implementation detail.
  */
 object RootManager {
 
@@ -16,8 +16,8 @@ object RootManager {
     private var suReader: BufferedReader? = null
 
     /**
-     * 检查并请求 Root 权限
-     * 只在第一次调用时触发 Magisk 授权弹窗
+     * Implementation detail.
+     * Implementation detail.
      */
     fun checkRootAccess(): Boolean {
         if (hasRootAccess == true) return true
@@ -25,7 +25,7 @@ object RootManager {
     }
 
     /**
-     * 初始化 su shell（只执行一次）
+     * Implementation detail.
      */
     private fun initSuShell(): Boolean {
         if (hasRootAccess == true) return true
@@ -35,7 +35,7 @@ object RootManager {
             suOutputStream = DataOutputStream(suProcess!!.outputStream)
             suReader = BufferedReader(InputStreamReader(suProcess!!.inputStream))
 
-            // 测试 root 权限
+            // Test root permission
             val result = executeCommandInternal("id")
             hasRootAccess = result?.contains("uid=0") == true
 
@@ -52,14 +52,14 @@ object RootManager {
     }
 
     /**
-     * 请求 Root 权限
+     * Implementation detail.
      */
     fun requestRootAccess(): Boolean {
         return checkRootAccess()
     }
 
     /**
-     * 执行 root 命令（使用持久化 shell）
+     * Implementation detail.
      */
     fun executeRootCommand(command: String): String? {
         if (hasRootAccess != true) {
@@ -69,16 +69,16 @@ object RootManager {
     }
 
     /**
-     * 内部命令执行
+     * Implementation detail.
      */
     private fun executeCommandInternal(command: String): String? {
         try {
             val os = suOutputStream ?: return null
             val reader = suReader ?: return null
 
-            // 使用唯一标记分隔输出
+            // Implementation detail.
             val marker = "CMD_DONE_${System.nanoTime()}"
-            
+
             os.writeBytes("$command\n")
             os.writeBytes("echo $marker\n")
             os.flush()
@@ -92,14 +92,14 @@ object RootManager {
 
             return output.toString().trim()
         } catch (e: Exception) {
-            // 连接断开，重新初始化
+            // Implementation detail.
             closeSuShell()
             return null
         }
     }
 
     /**
-     * 关闭 su shell
+     * disable  su shell
      */
     private fun closeSuShell() {
         try {
@@ -115,18 +115,18 @@ object RootManager {
     }
 
     /**
-     * 获取当前 Root 状态
+     * Implementation detail.
      */
     fun getRootStatus(): String {
         return when (hasRootAccess) {
-            true -> "已获取 Root 权限"
-            false -> "未获取 Root 权限"
-            null -> "未检测"
+            true -> "Root access granted"
+            false -> "Root access not granted"
+            null -> "Not checked"
         }
     }
 
     /**
-     * 重置 Root 状态
+     * Implementation detail.
      */
     fun resetRootStatus() {
         closeSuShell()
@@ -134,23 +134,23 @@ object RootManager {
     }
 
     /**
-     * 通过 Root Shell 批量读取多个内存块（优化版）
-     * 一次 su 调用读取多个地址
+     * Implementation detail.
+     * Implementation detail.
      */
     fun batchReadMemoryViaRoot(pid: Int, requests: List<Pair<Long, Int>>): List<ByteArray?> {
         if (requests.isEmpty()) return emptyList()
-        
+
         try {
-            // 构建批量读取命令
+            // Implementation detail.
             val commands = requests.mapIndexed { index, (address, size) ->
                 "dd if=/proc/$pid/mem bs=1 skip=$address count=$size 2>/dev/null | xxd -p > /data/local/tmp/mem_$index.hex"
             }
-            
-            // 一次性执行所有命令
+
+            // Implementation detail.
             val batchCmd = commands.joinToString(" && ")
             executeRootCommand(batchCmd)
-            
-            // 读取所有结果
+
+            // Implementation detail.
             return requests.indices.map { index ->
                 val hexResult = executeRootCommand("cat /data/local/tmp/mem_$index.hex 2>/dev/null")
                 if (hexResult.isNullOrEmpty()) {
@@ -165,7 +165,7 @@ object RootManager {
                     bytes
                 }
             }.also {
-                // 清理临时文件
+                // Implementation detail.
                 executeRootCommand("rm -f /data/local/tmp/mem_*.hex 2>/dev/null")
             }
         } catch (e: Exception) {
@@ -175,29 +175,29 @@ object RootManager {
     }
 
     /**
-     * 通过 Root Shell 读取内存（优化版：直接读取，不经过临时文件）
-     * 返回二进制数据
+     * Implementation detail.
+     * Implementation detail.
      */
     fun readMemoryViaRoot(pid: Int, address: Long, size: Int): ByteArray? {
         try {
-            // 使用 xxd 读取并转为十六进制
+            // Implementation detail.
             val cmd = "dd if=/proc/$pid/mem bs=1 skip=$address count=$size 2>/dev/null | xxd -p"
             val hexResult = executeRootCommand(cmd) ?: return null
-            
+
             if (hexResult.isEmpty()) return null
-            
-            // 移除所有空白字符
+
+            // Implementation detail.
             val hexClean = hexResult.replace("\\s".toRegex(), "")
-            
+
             if (hexClean.isEmpty()) return null
-            
-            // 将十六进制字符串转为字节数组
+
+            // Implementation detail.
             val bytes = ByteArray(hexClean.length / 2)
             for (i in bytes.indices) {
                 val hex = hexClean.substring(i * 2, i * 2 + 2)
                 bytes[i] = hex.toInt(16).toByte()
             }
-            
+
             return bytes
         } catch (e: Exception) {
             android.util.Log.e("RootManager", "readMemoryViaRoot failed: ${e.message}")
@@ -206,17 +206,17 @@ object RootManager {
     }
 
     /**
-     * 通过 Root Shell 写入内存（优化版：使用 xxd）
+     * Implementation detail.
      */
     fun writeMemoryViaRoot(pid: Int, address: Long, data: ByteArray): Boolean {
         try {
-            // 将字节数组转为十六进制字符串
+            // Implementation detail.
             val hexString = data.joinToString("") { "%02x".format(it) }
-            
-            // 通过 xxd 解码并写入
+
+            // Implementation detail.
             val cmd = "echo '$hexString' | xxd -r -p | dd of=/proc/$pid/mem bs=1 seek=$address count=${data.size} 2>/dev/null"
             val result = executeRootCommand(cmd)
-            
+
             return result != null
         } catch (e: Exception) {
             android.util.Log.e("RootManager", "writeMemoryViaRoot failed: ${e.message}")

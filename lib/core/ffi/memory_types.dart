@@ -1,11 +1,11 @@
-/// 内存数据类型定义和工具函数
+/// Documentation.
 
 import 'dart:typed_data';
 import '../models/memory_result.dart';
 
-/// 数据类型工具类
+/// Documentation.
 class MemoryTypeUtils {
-  /// 获取数据类型的字节大小
+  /// Documentation.
   static int getSize(DataType type) {
     switch (type) {
       case DataType.byte:
@@ -21,11 +21,11 @@ class MemoryTypeUtils {
       case DataType.double:
         return 8;
       case DataType.string:
-        return 0; // 字符串大小不固定
+        return 0; // String size is variable
     }
   }
 
-  /// 将值转换为指定类型的字节表示
+  /// Documentation.
   static List<int> toBytes(dynamic value, DataType type) {
     switch (type) {
       case DataType.byte:
@@ -51,7 +51,7 @@ class MemoryTypeUtils {
           (value >> 56) & 0xFF,
         ];
       case DataType.float:
-        // 使用 Float32List 进行转换
+        // Implementation detail.
         final bytes = List<int>.filled(4, 0);
         final byteData = ByteData(4);
         byteData.setFloat32(0, value.toDouble());
@@ -72,7 +72,7 @@ class MemoryTypeUtils {
     }
   }
 
-  /// 从字节表示转换为指定类型的值
+  /// Documentation.
   static dynamic fromBytes(List<int> bytes, DataType type) {
     if (bytes.isEmpty) return null;
 
@@ -106,7 +106,7 @@ class MemoryTypeUtils {
     }
   }
 
-  /// 格式化值为可读字符串
+  /// Documentation.
   static String formatValue(dynamic value, DataType type) {
     if (value == null) return 'N/A';
 
@@ -128,12 +128,12 @@ class MemoryTypeUtils {
     }
   }
 
-  /// 格式化地址为十六进制字符串
+  /// Documentation.
   static String formatAddress(int address) {
     return '0x${address.toRadixString(16).toUpperCase().padLeft(16, '0')}';
   }
 
-  /// 格式化大小为可读字符串
+  /// Documentation.
   static String formatSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';

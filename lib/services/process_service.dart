@@ -1,46 +1,46 @@
-/// 进程管理服务封装
+/// Documentation.
 
 import 'dart:async';
 import '../core/ffi/native_bridge.dart';
 import '../core/models/process_info.dart';
 
-/// 进程服务
+/// Documentation.
 class ProcessService {
   final NativeBridge _bridge;
 
-  /// 当前附加的进程
+  /// Documentation.
   ProcessInfo? _attachedProcess;
 
-  /// 进程列表流控制器
+  /// Documentation.
   final _processListController =
       StreamController<List<ProcessInfo>>.broadcast();
 
-  /// 附加状态流控制器
+  /// Documentation.
   final _attachStateController = StreamController<ProcessInfo?>.broadcast();
 
   ProcessService({required NativeBridge bridge}) : _bridge = bridge;
 
-  /// 进程列表流
+  /// Documentation.
   Stream<List<ProcessInfo>> get processListStream =>
       _processListController.stream;
 
-  /// 附加状态流
+  /// Documentation.
   Stream<ProcessInfo?> get attachStateStream => _attachStateController.stream;
 
-  /// 当前附加的进程
+  /// Documentation.
   ProcessInfo? get attachedProcess => _attachedProcess;
 
-  /// 是否已附加进程
+  /// whether Attachedprocess
   bool get isAttached => _attachedProcess != null;
 
-  /// 获取运行中的进程列表
+  /// Documentation.
   Future<List<ProcessInfo>> getProcessList() async {
     final processes = await _bridge.getProcessList();
     _processListController.add(processes);
     return processes;
   }
 
-  /// 附加到目标进程
+  /// Documentation.
   Future<bool> attachProcess(ProcessInfo process) async {
     final success = await _bridge.attachProcess(process.pid);
     if (success) {
@@ -50,7 +50,7 @@ class ProcessService {
     return success;
   }
 
-  /// 分离当前进程
+  /// Detachcurrent process
   Future<bool> detachProcess() async {
     final success = await _bridge.detachProcess();
     if (success) {
@@ -60,17 +60,17 @@ class ProcessService {
     return success;
   }
 
-  /// 检查 Root 权限
+  /// Documentation.
   Future<bool> checkRootAccess() async {
     return await _bridge.checkRootAccess();
   }
 
-  /// 请求 Root 权限
+  /// Documentation.
   Future<bool> requestRootAccess() async {
     return await _bridge.requestRootAccess();
   }
 
-  /// 释放资源
+  /// Documentation.
   void dispose() {
     _processListController.close();
     _attachStateController.close();

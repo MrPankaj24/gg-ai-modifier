@@ -6,7 +6,7 @@ void main() {
     await tester.pumpWidget(const GgModifierApp());
     await tester.pumpAndSettle();
 
-    // 验证 AI 对话页面标题存在
-    expect(find.text('GG-AI 助手'), findsOneWidget);
+    // Verify that the AI chat page title is present
+    expect(find.text('Chat History'), findsOneWidget);
   });
 }

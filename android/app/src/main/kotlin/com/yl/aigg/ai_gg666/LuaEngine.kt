@@ -19,8 +19,8 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * LuaJ GG API 桥接层
- * 在 JVM 中执行 Lua 脚本，提供与 GG 修改器兼容的交互式 API
+ * Implementation detail.
+ * Implementation detail.
  */
 object LuaEngine {
 
@@ -52,7 +52,7 @@ object LuaEngine {
             chunk.call()
             return outputLog.toString()
         } catch (e: Exception) {
-            val errorMsg = "Lua 执行错误: ${e.message}"
+            val errorMsg = "Lua execution error: ${e.message}"
             outputLog.appendLine(errorMsg)
             return outputLog.toString()
         }
@@ -89,14 +89,14 @@ object LuaEngine {
                         latch.countDown()
                     }
                     .setCancelable(false)
-                    .setNegativeButton("取消") { _, _ ->
+                    .setNegativeButton("Cancel") { _, _ ->
                         selectedIndex.set(-1)
                         latch.countDown()
                     }
                     .create()
                 showDialog(dialog)
             } catch (e: Exception) {
-                outputLog.appendLine("⚠️ 对话框显示失败: ${e.message}")
+                outputLog.appendLine("⚠️ Dialog display failed: ${e.message}")
                 selectedIndex.set(-1)
                 latch.countDown()
             }
@@ -120,11 +120,11 @@ object LuaEngine {
                 val dialog = AlertDialog.Builder(ctx)
                     .setTitle(title)
                     .setView(editText)
-                    .setPositiveButton("确定") { _, _ ->
+                    .setPositiveButton("OK") { _, _ ->
                         inputResult.set(editText.text.toString())
                         latch.countDown()
                     }
-                    .setNegativeButton("取消") { _, _ ->
+                    .setNegativeButton("Cancel") { _, _ ->
                         inputResult.set(defaultValue)
                         latch.countDown()
                     }
@@ -132,7 +132,7 @@ object LuaEngine {
                     .create()
                 showDialog(dialog)
             } catch (e: Exception) {
-                outputLog.appendLine("⚠️ 输入框显示失败: ${e.message}")
+                outputLog.appendLine("⚠️ Input dialog failed: ${e.message}")
                 inputResult.set(defaultValue)
                 latch.countDown()
             }
@@ -152,11 +152,11 @@ object LuaEngine {
                 val dialog = AlertDialog.Builder(ctx)
                     .setTitle(title)
                     .setMessage(message)
-                    .setPositiveButton("确定") { _, _ ->
+                    .setPositiveButton("OK") { _, _ ->
                         confirmed.set(1)
                         latch.countDown()
                     }
-                    .setNegativeButton("取消") { _, _ ->
+                    .setNegativeButton("Cancel") { _, _ ->
                         confirmed.set(0)
                         latch.countDown()
                     }
@@ -215,7 +215,7 @@ object LuaEngine {
             override fun call(arg: LuaValue): LuaValue {
                 val msg = arg.tojstring()
                 outputLog.appendLine("⚠️ $msg")
-                showConfirmDialog("提示", msg)
+                showConfirmDialog("Notice", msg)
                 return LuaValue.NIL
             }
         })
@@ -241,7 +241,7 @@ object LuaEngine {
         gg.set("choice", object : VarArgFunction() {
             override fun invoke(args: Varargs): Varargs {
                 val items = mutableListOf<String>()
-                var title = "选择"
+                var title = "Select"
                 if (args.arg(1).istable()) {
                     val table = args.arg(1).checktable()
                     for (i in 1..table.length()) items.add(table.get(i).tojstring())
@@ -259,9 +259,9 @@ object LuaEngine {
 
                 val selected = showChoiceDialog(title, items)
                 if (selected > 0) {
-                    outputLog.appendLine("  → 选择了: ${items[selected - 1]}")
+                    outputLog.appendLine("  → Selected: ${items[selected - 1]}")
                 } else {
-                    outputLog.appendLine("  → 已取消")
+                    outputLog.appendLine("  → Cancelled")
                 }
                 return if (selected > 0) LuaValue.valueOf(selected) else LuaValue.NIL
             }
@@ -279,7 +279,7 @@ object LuaEngine {
                 val results = MemoryEngine.searchExact(numValue, type)
                 searchResults.clear()
                 searchResults.addAll(results)
-                outputLog.appendLine("🔍 搜索 $value ($type): 找到 ${results.size} 个结果")
+                outputLog.appendLine("🔍 Search $value ($type): Found ${results.size} results")
                 return LuaValue.valueOf(results.size)
             }
         })
@@ -294,7 +294,7 @@ object LuaEngine {
                 val results = MemoryEngine.filterResults(prevAddresses, numValue, type)
                 searchResults.clear()
                 searchResults.addAll(results)
-                outputLog.appendLine("🔍 过滤后: ${results.size} 个结果")
+                outputLog.appendLine("🔍 After filtering: ${results.size}  results")
                 return LuaValue.valueOf(results.size)
             }
         })
@@ -348,7 +348,7 @@ object LuaEngine {
                         }
                     }
                 }
-                outputLog.appendLine("✏️ 已修改 $count 个地址")
+                outputLog.appendLine("✏️ Updated $count addresses")
                 return LuaValue.valueOf(count)
             }
         })
@@ -364,7 +364,7 @@ object LuaEngine {
                     else -> value.tolong()
                 }
                 val success = MemoryEngine.writeMemory(address, numValue, type)
-                if (success) outputLog.appendLine("✏️ 写入 0x${address.toString(16).uppercase()} = $numValue")
+                if (success) outputLog.appendLine("✏️ Wrote 0x${address.toString(16).uppercase()} = $numValue")
                 return LuaValue.valueOf(success)
             }
         })
@@ -380,7 +380,7 @@ object LuaEngine {
                     else -> value.tolong()
                 }
                 val success = MemoryFreezer.freeze(address, numValue, type)
-                if (success) outputLog.appendLine("🔒 冻结 0x${address.toString(16).uppercase()} = $numValue")
+                if (success) outputLog.appendLine("🔒 Froze 0x${address.toString(16).uppercase()} = $numValue")
                 return LuaValue.valueOf(success)
             }
         })
@@ -409,7 +409,7 @@ object LuaEngine {
                         }
                     }
                 }
-                outputLog.appendLine("🔒 已冻结 $count 个地址")
+                outputLog.appendLine("🔒 Froze $count addresses")
                 return LuaValue.valueOf(count)
             }
         })

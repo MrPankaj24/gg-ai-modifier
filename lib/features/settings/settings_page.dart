@@ -1,4 +1,4 @@
-/// 设置页面
+/// Documentation.
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -10,16 +10,16 @@ import '../../core/llm/llm_config.dart';
 import '../../core/llm/prompt_builder.dart';
 import '../../main.dart';
 
-/// LLM 配置 Provider
+/// Documentation.
 final llmConfigProvider = StateProvider<LlmConfig>((ref) {
-  // 从存储加载配置
+  // Implementation detail.
   final storage = ref.read(storageServiceProvider);
   final saved = storage.getLlmConfig();
   return saved ??
       const LlmConfig(baseUrl: '', apiKey: '', model: 'deepseek-chat');
 });
 
-/// 设置页面
+/// Documentation.
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
@@ -39,7 +39,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   String? _testResult;
   AiReadDepth _selectedReadDepth = AiReadDepth.sample50;
 
-  /// 自定义预设列表（从存储加载）
+  /// Documentation.
   final Map<String, LlmConfig> _customPresets = {};
 
   @override
@@ -56,13 +56,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       text: config.maxTokens.toString(),
     );
 
-    // 加载存储服务
+    // Implementation detail.
     final storage = ref.read(storageServiceProvider);
 
-    // 加载自定义预设
+    // Implementation detail.
     _loadCustomPresets(storage);
 
-    // 恢复保存的预设名称
+    // Implementation detail.
     final savedPreset = storage.getSetting('llm_preset') as String?;
     if (savedPreset != null) {
       _selectedPreset = savedPreset;
@@ -70,7 +70,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       _selectedPreset = _detectPreset(config);
     }
 
-    // 加载悬浮窗自动开启设置
+    // load Overlayauto enable Settings
     _autoStartOverlay =
         storage.getSetting('auto_start_overlay', defaultValue: false) as bool;
     if (_autoStartOverlay) {
@@ -78,7 +78,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _toggleOverlay(true);
       });
     }
-    // 加载 AI 读取深度设置
+    // load  AI Read DepthSettings
     final depthIndex =
         storage.getSetting('ai_read_depth', defaultValue: 2) as int;
     _selectedReadDepth =
@@ -95,7 +95,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     super.dispose();
   }
 
-  /// 加载自定义预设
+  /// Documentation.
   void _loadCustomPresets(dynamic storage) {
     try {
       final json = storage.getSetting('custom_presets') as String?;
@@ -112,7 +112,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     } catch (_) {}
   }
 
-  /// 保存自定义预设
+  /// Documentation.
   void _saveCustomPresets() {
     final storage = ref.read(storageServiceProvider);
     final json = _customPresets.map(
@@ -121,16 +121,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     storage.saveSetting('custom_presets', const JsonEncoder().convert(json));
   }
 
-  /// 根据当前配置自动匹配预设
+  /// Documentation.
   String _detectPreset(LlmConfig config) {
-    // 检查内置预设
+    // Implementation detail.
     for (final entry in LlmConfig.presets.entries) {
       if (entry.value.baseUrl == config.baseUrl &&
           entry.value.model == config.model) {
         return entry.key;
       }
     }
-    // 检查自定义预设
+    // Implementation detail.
     for (final entry in _customPresets.entries) {
       if (entry.value.baseUrl == config.baseUrl &&
           entry.value.model == config.model) {
@@ -140,7 +140,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     return 'custom';
   }
 
-  /// 获取所有预设（内置 + 自定义）
+  /// Documentation.
   Map<String, LlmConfig> get _allPresets => {
     ...LlmConfig.presets,
     ..._customPresets,
@@ -153,13 +153,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     }
     final preset = _allPresets[presetName];
     if (preset != null) {
-      // 保存当前预设的 apiKey
+      // Implementation detail.
       _saveCurrentPresetApiKey();
       setState(() {
         _selectedPreset = presetName;
         _baseUrlController.text = preset.baseUrl;
         _modelController.text = preset.model;
-        // 恢复该预设保存的 apiKey
+        // Implementation detail.
         final storage = ref.read(storageServiceProvider);
         final savedKey =
             storage.getSetting('preset_key_$presetName') as String?;
@@ -168,7 +168,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     }
   }
 
-  /// 保存当前预设的 apiKey
+  /// Documentation.
   void _saveCurrentPresetApiKey() {
     final apiKey = _apiKeyController.text.trim();
     if (_selectedPreset != 'custom' && apiKey.isNotEmpty) {
@@ -177,7 +177,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     }
   }
 
-  /// 显示添加自定义预设对话框
+  /// Documentation.
   void _showAddCustomPresetDialog() {
     final nameController = TextEditingController();
     final urlController = TextEditingController();
@@ -188,7 +188,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFFFFFFFF),
-        title: const Text('添加自定义模型'),
+        title: const Text('Add custom model'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -196,8 +196,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               TextField(
                 controller: nameController,
                 decoration: const InputDecoration(
-                  labelText: '显示名称',
-                  hintText: '如：我的API',
+                  labelText: 'Display name',
+                  hintText: 'For example: My API',
                 ),
               ),
               const SizedBox(height: 12),
@@ -221,7 +221,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               TextField(
                 controller: modelController,
                 decoration: const InputDecoration(
-                  labelText: '模型名称',
+                  labelText: 'Model name',
                   hintText: 'gpt-4o',
                 ),
               ),
@@ -231,7 +231,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -243,7 +243,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               if (name.isEmpty || url.isEmpty || model.isEmpty) {
                 ScaffoldMessenger.of(
                   context,
-                ).showSnackBar(const SnackBar(content: Text('请填写完整信息')));
+                ).showSnackBar(const SnackBar(content: Text('Complete all fields')));
                 return;
               }
 
@@ -262,27 +262,27 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               _saveCurrentPresetApiKey();
               Navigator.pop(context);
             },
-            child: const Text('保存'),
+            child: const Text('Save'),
           ),
         ],
       ),
     );
   }
 
-  /// 显示删除自定义预设对话框
+  /// Documentation.
   void _showDeleteCustomPresetsDialog() {
-    // 如果没有自定义预设，显示提示
+    // Implementation detail.
     if (_customPresets.isEmpty) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           backgroundColor: const Color(0xFFFFFFFF),
-          title: const Text('删除自定义模型'),
-          content: const Text('暂无自定义模型可删除。\n\n请点击"+ 添加自定义"按钮添加自定义模型。'),
+          title: const Text('Delete custom model'),
+          content: const Text('No custom models to delete.\n\nTap the "+ Add custom" button to add one.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('知道了'),
+              child: const Text('Got it'),
             ),
           ],
         ),
@@ -297,7 +297,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           backgroundColor: const Color(0xFFFFFFFF),
-          title: const Text('删除自定义模型'),
+          title: const Text('Delete custom model'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -327,7 +327,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('取消'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: selectedToDelete.isEmpty
@@ -340,7 +340,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         }
                       });
                       _saveCustomPresets();
-                      // 如果删除的是当前选中的预设，自动切换到 DeepSeek 并保存
+                      // Implementation detail.
                       if (deletedCurrentPreset) {
                         _applyPreset('deepseek');
                         _saveConfig();
@@ -348,14 +348,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('✅ 已删除 ${selectedToDelete.length} 个自定义模型'),
+                          content: Text('✅ Deleted ${selectedToDelete.length} custom models'),
                         ),
                       );
                     },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFE53935),
               ),
-              child: const Text('删除'),
+              child: const Text('Delete'),
             ),
           ],
         ),
@@ -374,28 +374,28 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
     ref.read(llmConfigProvider.notifier).state = config;
 
-    // 如果当前选择的是自定义预设，同步更新 _customPresets 中的配置
+    // Implementation detail.
     if (_selectedPreset.startsWith('custom_') &&
         _customPresets.containsKey(_selectedPreset)) {
       _customPresets[_selectedPreset] = config;
       _saveCustomPresets();
     }
 
-    // 持久化保存到 Hive
+    // Implementation detail.
     final storage = ref.read(storageServiceProvider);
     storage.saveLlmConfig(config);
-    // 保存当前预设名称
+    // Implementation detail.
     storage.saveSetting('llm_preset', _selectedPreset);
 
-    // 同时保存到 SharedPreferences（供悬浮窗读取）
+    // Implementation detail.
     _saveConfigToSharedPreferences(config);
 
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('✅ 配置已保存')));
+    ).showSnackBar(const SnackBar(content: Text('✅ Configuration saved')));
   }
 
-  /// 保存 LLM 配置到 SharedPreferences（供悬浮窗 Kotlin 代码读取）
+  /// Documentation.
   Future<void> _saveConfigToSharedPreferences(LlmConfig config) async {
     try {
       const channel = MethodChannel('com.yl.aigg/bridge');
@@ -407,7 +407,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         'maxTokens': config.maxTokens,
       });
     } catch (e) {
-      // 忽略错误
+      // Implementation detail.
     }
   }
 
@@ -424,30 +424,30 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     if (baseUrl.isEmpty || apiKey.isEmpty) {
       setState(() {
         _isTesting = false;
-        _testResult = '❌ 请先填写 API 地址和密钥';
+        _testResult = '❌ Enter the API URL and key first';
       });
       return;
     }
 
-    // 检测是否是 Gemini API
+    // Implementation detail.
     final isGemini = baseUrl.contains('generativelanguage.googleapis.com');
 
     try {
       if (isGemini) {
-        // Gemini 使用官方 SDK 测试
+        // Implementation detail.
         await _testGeminiConnection(apiKey, model);
       } else {
-        // OpenAI 兼容 API
+        // Implementation detail.
         await _testOpenAIConnection(baseUrl, apiKey, model);
       }
     } catch (e) {
       setState(() {
         if (e.toString().contains('TimeoutException')) {
-          _testResult = '❌ 连接超时，请检查网络';
+          _testResult = '❌ Connection timed out; check your network';
         } else if (e.toString().contains('SocketException')) {
-          _testResult = '❌ 网络不可用，请检查网络连接\n\n如果使用了 VPN，请确保 VPN 已开启';
+          _testResult = '❌ Network unavailable; check your network connection\n\nIf you use a VPN, make sure it is enabled';
         } else {
-          _testResult = '❌ 连接失败: $e';
+          _testResult = '❌ Connection failed: $e';
         }
       });
     } finally {
@@ -457,10 +457,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     }
   }
 
-  /// 测试 Gemini API 连接（使用 OpenAI 兼容接口）
+  /// Documentation.
   Future<void> _testGeminiConnection(String apiKey, String model) async {
     try {
-      // 使用 OpenAI 兼容接口: /v1beta/openai/chat/completions
+      // Implementation detail.
       final uri = Uri.parse('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
       final response = await http
           .post(
@@ -483,40 +483,40 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         final json = jsonDecode(response.body);
         if (json['choices'] != null) {
           setState(() {
-            _testResult = '✅ Gemini 连接成功！模型: $model';
+            _testResult = '✅ Gemini Connected! Model: $model';
           });
         } else {
           setState(() {
-            _testResult = '⚠️ Gemini 响应格式异常';
+            _testResult = '⚠️ Gemini Unexpected response format';
           });
         }
       } else if (response.statusCode == 404) {
         setState(() {
-          _testResult = '❌ 404 错误\n\nURL: ${uri.toString()}\n\n响应: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}';
+          _testResult = '❌ 404 error \n\nURL: ${uri.toString()}\n\nResponse: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}';
         });
       } else if (response.statusCode == 401 || response.statusCode == 403) {
         setState(() {
-          _testResult = '❌ API Key 无效 (${response.statusCode})';
+          _testResult = '❌ Invalid API key (${response.statusCode})';
         });
       } else {
         setState(() {
-          _testResult = '❌ 请求失败 (${response.statusCode}): ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}';
+          _testResult = '❌ Request failed (${response.statusCode}): ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}';
         });
       }
     } catch (e) {
       setState(() {
         if (e.toString().contains('TimeoutException')) {
-          _testResult = '❌ 连接超时，请检查网络';
+          _testResult = '❌ Connection timed out; check your network';
         } else if (e.toString().contains('SocketException')) {
-          _testResult = '❌ 网络不可用\n\n如果使用了 VPN，请确保 VPN 已开启';
+          _testResult = '❌ Network unavailable\n\nIf you use a VPN, make sure it is enabled';
         } else {
-          _testResult = '❌ 连接失败: $e';
+          _testResult = '❌ Connection failed: $e';
         }
       });
     }
   }
 
-  /// 测试 OpenAI 兼容 API 连接
+  /// Documentation.
   Future<void> _testOpenAIConnection(String baseUrl, String apiKey, String model) async {
     final uri = Uri.parse('$baseUrl/chat/completions');
     final response = await http
@@ -540,25 +540,25 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       final json = jsonDecode(response.body);
       if (json['choices'] != null) {
         setState(() {
-          _testResult = '✅ 连接成功！模型: $model';
+          _testResult = '✅ Connected! Model: $model';
         });
       } else {
         setState(() {
-          _testResult = '⚠️ 响应格式异常: ${response.body.substring(0, 100)}';
+          _testResult = '⚠️ Unexpected response format: ${response.body.substring(0, 100)}';
         });
       }
     } else if (response.statusCode == 401) {
       setState(() {
-        _testResult = '❌ API Key 无效 (401)';
+        _testResult = '❌ Invalid API key (401)';
       });
     } else if (response.statusCode == 404) {
       setState(() {
-        _testResult = '❌ 模型不存在或 API 地址错误 (404)';
+        _testResult = '❌ Model not found or API URL error  (404)';
       });
     } else {
       setState(() {
         _testResult =
-            '❌ 请求失败 (${response.statusCode}): ${response.body.substring(0, response.body.length > 100 ? 100 : response.body.length)}';
+            '❌ Request failed (${response.statusCode}): ${response.body.substring(0, response.body.length > 100 ? 100 : response.body.length)}';
       });
     }
   }
@@ -571,22 +571,22 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           children: [
             Icon(Icons.settings, color: Color(0xFF3D5AFE)),
             SizedBox(width: 8),
-            Text('设置'),
+            Text('Settings'),
           ],
         ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // LLM API 配置
-          _buildSectionTitle('🤖 LLM API 配置'),
+          // LLM API Configuration
+          _buildSectionTitle('🤖 LLM API Configuration'),
           const SizedBox(height: 12),
 
-          // 预设选择
+          // Implementation detail.
           _buildPresetSelector(),
           const SizedBox(height: 16),
 
-          // API 地址
+          // API address
           TextField(
             controller: _baseUrlController,
             decoration: const InputDecoration(
@@ -609,25 +609,25 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
           const SizedBox(height: 12),
 
-          // 模型名称
+          // Model name
           TextField(
             controller: _modelController,
             decoration: const InputDecoration(
-              labelText: '模型名称',
+              labelText: 'Model name',
               hintText: 'deepseek-chat',
               prefixIcon: Icon(Icons.smart_toy, size: 16),
             ),
           ),
           const SizedBox(height: 12),
 
-          // 温度和最大 Token
+          // Temperature and Max tokens
           Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: _temperatureController,
                   decoration: const InputDecoration(
-                    labelText: '温度',
+                    labelText: 'Temperature',
                     hintText: '0.7',
                     prefixIcon: Icon(Icons.thermostat, size: 16),
                   ),
@@ -639,7 +639,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 child: TextField(
                   controller: _maxTokensController,
                   decoration: const InputDecoration(
-                    labelText: '最大 Token',
+                    labelText: 'Max tokens',
                     hintText: '4096',
                     prefixIcon: Icon(Icons.token, size: 16),
                   ),
@@ -650,13 +650,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
           const SizedBox(height: 20),
 
-          // 保存按钮
+          // Savebutton
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _saveConfig,
               icon: const Icon(Icons.save),
-              label: const Text('保存配置'),
+              label: const Text('Save Configuration'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -664,8 +664,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
           const SizedBox(height: 24),
 
-          // 连接测试
-          _buildSectionTitle('🔗 连接测试'),
+          // Connection test
+          _buildSectionTitle('🔗 Connection test'),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
@@ -678,7 +678,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.wifi_find),
-              label: Text(_isTesting ? '测试中...' : '测试连接'),
+              label: Text(_isTesting ? 'Testing...' : 'Test Connection'),
             ),
           ),
           if (_testResult != null) ...[
@@ -709,38 +709,38 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ],
           const SizedBox(height: 24),
 
-          // AI 读取深度
-          _buildSectionTitle('📊 AI 读取深度 (Token 优化)'),
+          // AI Read Depth
+          _buildSectionTitle('📊 AI Read Depth (Token optimization)'),
           const SizedBox(height: 12),
           _buildReadDepthCard(),
           const SizedBox(height: 24),
 
-          // 悬浮窗
-          _buildSectionTitle('🎮 悬浮窗'),
+          // Overlay
+          _buildSectionTitle('🎮 Overlay'),
           const SizedBox(height: 12),
           _buildOverlayCard(),
           const SizedBox(height: 24),
 
-          // Root 权限
-          _buildSectionTitle('🔐 Root 权限'),
+          // Root Permission
+          _buildSectionTitle('🔐 Root Permission'),
           const SizedBox(height: 12),
           _buildRootStatusCard(),
           const SizedBox(height: 24),
 
-          // 关于
-          _buildSectionTitle('ℹ️ 关于'),
+          // about
+          _buildSectionTitle('ℹ️ about '),
           const SizedBox(height: 12),
           _buildInfoCard(
             icon: Icons.info_outline,
             title: 'GG-AI Modifier',
-            subtitle: '版本 2.0.0 | AI 驱动的游戏内存修改器',
+            subtitle: 'Version 2.0.0 | AI-powered game memory modifier',
           ),
           const SizedBox(height: 12),
-          // GitHub 开源地址
+          // GitHub repository
           Card(
             child: ListTile(
               leading: const Icon(Icons.code, color: Color(0xFF3D5AFE)),
-              title: const Text('GitHub 开源地址'),
+              title: const Text('GitHub repository'),
               subtitle: const Text(
                 'https://github.com/yl985211/gg-ai-modifier',
                 style: TextStyle(fontSize: 12, color: Color(0xFF3D5AFE)),
@@ -769,7 +769,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '⚠️ 本工具仅供学习研究和个人单机游戏使用，禁止用于在线竞技游戏。',
+                    '⚠️ This tool is for education, research, and personal single-player games only. Do not use it for online competitive games.',
                     style: TextStyle(fontSize: 12, color: Colors.orange),
                   ),
                 ),
@@ -799,7 +799,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            '选择 API 提供商',
+            'Select API provider',
             style: TextStyle(fontSize: 13, color: Color(0xFF4A6572)),
           ),
           const SizedBox(height: 8),
@@ -812,7 +812,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 final labels = {
                   'deepseek': 'DeepSeek',
                   'deepseek-reasoner': 'DeepSeek R1',
-                  'xiaomi-mimo': '小米 MiMo',
+                  'xiaomi-mimo': 'Xiaomi MiMo',
                   'openai': 'OpenAI',
                   'gemini': 'Gemini',
                 };
@@ -834,13 +834,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 );
               }),
               ActionChip(
-                label: const Text('+ 添加自定义'),
+                label: const Text('+ Add custom'),
                 onPressed: () => _showAddCustomPresetDialog(),
                 backgroundColor: const Color(0xFFE8EAF6),
                 labelStyle: const TextStyle(color: Color(0xFF4A6572)),
               ),
               ActionChip(
-                label: const Text('删除自定义'),
+                label: const Text('Delete custom'),
                 onPressed: () => _showDeleteCustomPresetsDialog(),
                 backgroundColor: const Color(0xFFFFEBEE),
                 labelStyle: const TextStyle(color: Color(0xFFE53935)),
@@ -852,24 +852,24 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
-  String _rootStatus = '未检测';
+  String _rootStatus = 'Not checked';
   bool _isCheckingRoot = false;
 
   Future<void> _checkRootAccess() async {
     setState(() {
       _isCheckingRoot = true;
-      _rootStatus = '检测中...';
+      _rootStatus = 'Checking...';
     });
 
     try {
       const channel = MethodChannel('com.yl.aigg/bridge');
       final result = await channel.invokeMethod('checkRootAccess');
       setState(() {
-        _rootStatus = result == true ? '已获取 Root 权限 ✅' : '未获取 Root 权限 ❌';
+        _rootStatus = result == true ? 'Root access granted ✅' : 'Root access not granted ❌';
       });
     } catch (e) {
       setState(() {
-        _rootStatus = '检测失败: $e';
+        _rootStatus = 'Check failed: $e';
       });
     } finally {
       setState(() {
@@ -897,14 +897,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Root 状态: $_rootStatus',
+                  'Root status: $_rootStatus',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             const Text(
-              '需要 Root 权限才能读写其他进程内存。\n点击下方按钮会触发 Magisk 授权弹窗。',
+              'Root access is required to read and write other process memory.\nTap the button below to open the Magisk authorization prompt.',
               style: TextStyle(fontSize: 12, color: Color(0xFF4A6572)),
             ),
             const SizedBox(height: 12),
@@ -919,7 +919,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.refresh),
-                label: Text(_isCheckingRoot ? '检测中...' : '检测 Root 权限'),
+                label: Text(_isCheckingRoot ? 'Checking...' : 'Check Root access'),
               ),
             ),
           ],
@@ -942,11 +942,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         if (started != true) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('请授予悬浮窗权限')));
+          ).showSnackBar(const SnackBar(content: Text('Grant overlay permission')));
         } else {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('✅ 悬浮窗已开启')));
+          ).showSnackBar(const SnackBar(content: Text('✅ Overlay enabled')));
         }
       } else {
         await channel.invokeMethod('stopOverlay');
@@ -955,12 +955,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         });
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('悬浮窗已关闭')));
+        ).showSnackBar(const SnackBar(content: Text('Overlay disabled')));
       }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('操作失败: $e')));
+      ).showSnackBar(SnackBar(content: Text('Operation failed: $e')));
     }
   }
 
@@ -971,7 +971,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final storage = ref.read(storageServiceProvider);
     storage.saveSetting('auto_start_overlay', value);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(value ? '✅ 启动时自动开启悬浮窗' : '已关闭自动开启悬浮窗')),
+      SnackBar(content: Text(value ? '✅ Enable overlay at startup' : 'Overlay auto-start disabled')),
     );
   }
 
@@ -988,7 +988,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
-                    '游戏内悬浮窗',
+                    'In-game overlay',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -1001,7 +1001,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
             const SizedBox(height: 8),
             const Text(
-              '开启后会在屏幕上显示一个悬浮球，点击可快速打开 AI 对话、内存搜索等功能，无需切换窗口。',
+              'When enabled, an overlay bubble appears on screen for quick access to AI chat and memory search without switching windows.',
               style: TextStyle(fontSize: 12, color: Color(0xFF4A6572)),
             ),
             const SizedBox(height: 12),
@@ -1010,7 +1010,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 const Icon(Icons.autorenew, size: 16, color: Color(0xFF4A6572)),
                 const SizedBox(width: 8),
                 const Expanded(
-                  child: Text('启动时自动开启悬浮窗', style: TextStyle(fontSize: 13)),
+                  child: Text('Enable overlay at startup', style: TextStyle(fontSize: 13)),
                 ),
                 Switch(
                   value: _autoStartOverlay,
@@ -1038,7 +1038,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'AI 读取深度',
+                    'AI Read Depth',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -1046,8 +1046,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
             const SizedBox(height: 8),
             const Text(
-              '限制发送给 AI 的搜索结果数量，节省 Token 并防止上下文溢出。'
-              '当结果过多时，仅发送前 N 条样本和统计数据。',
+              'Limit search results sent to AI to save tokens and prevent context overflow.'
+              'When there are many results, only the first N samples and statistics are sent.',
               style: TextStyle(fontSize: 12, color: Color(0xFF4A6572)),
             ),
             const SizedBox(height: 12),
@@ -1066,7 +1066,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     final storage = ref.read(storageServiceProvider);
                     storage.saveSetting('ai_read_depth', depth.index);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('✅ AI 读取深度已设为: ${depth.label}')),
+                      SnackBar(content: Text('✅ AI read depth set to: ${depth.label}')),
                     );
                   },
                   selectedColor: const Color(0xFF3D5AFE),

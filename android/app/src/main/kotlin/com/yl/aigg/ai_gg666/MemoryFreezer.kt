@@ -1,8 +1,8 @@
 package com.yl.aigg.ai_gg666
 
 /**
- * 内存冻结器
- * 后台线程持续写入目标值，防止游戏自动修改数据
+ * Implementation detail.
+ * Implementation detail.
  */
 object MemoryFreezer {
 
@@ -11,7 +11,7 @@ object MemoryFreezer {
     private var isRunning = false
 
     /**
-     * 冻结内存地址
+     * Freezememoryaddress
      */
     fun freeze(address: Int, value: Any, type: String): Boolean {
         frozenAddresses[address] = mapOf(
@@ -24,7 +24,7 @@ object MemoryFreezer {
     }
 
     /**
-     * 解除冻结
+     * Implementation detail.
      */
     fun unfreeze(address: Int): Boolean {
         frozenAddresses.remove(address)
@@ -35,14 +35,14 @@ object MemoryFreezer {
     }
 
     /**
-     * 获取所有冻结地址
+     * Implementation detail.
      */
     fun getFrozenAddresses(): List<Map<String, Any>> {
         return frozenAddresses.values.toList()
     }
 
     /**
-     * 启动冻结守护线程
+     * Implementation detail.
      */
     private fun startFreezingIfNeeded() {
         if (isRunning) return
@@ -56,11 +56,11 @@ object MemoryFreezer {
                     try {
                         MemoryEngine.writeMemory(address, value, type)
                     } catch (e: Exception) {
-                        // 写入失败，跳过
+                        // Implementation detail.
                     }
                 }
                 try {
-                    Thread.sleep(100) // 每 100ms 写入一次
+                    Thread.sleep(100) // Write every 100 ms
                 } catch (e: InterruptedException) {
                     break
                 }
@@ -72,7 +72,7 @@ object MemoryFreezer {
     }
 
     /**
-     * 停止冻结
+     * Implementation detail.
      */
     private fun stopFreezing() {
         isRunning = false

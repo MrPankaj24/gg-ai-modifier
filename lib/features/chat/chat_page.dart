@@ -1,7 +1,7 @@
-/// AI 对话记录页面
-/// 显示历史对话记录，管理对话历史
-/// 支持加载悬浮窗保存的聊天记录
-/// 支持单条/多条导出为 Markdown 文件
+/// Documentation.
+/// Documentation.
+/// Documentation.
+/// Documentation.
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -13,13 +13,13 @@ import '../../main.dart';
 import '../process/process_selector.dart';
 import 'markdown_webview.dart';
 
-/// 聊天消息列表 Provider
+/// Documentation.
 final chatMessagesProvider = StateProvider<List<ChatMessage>>((ref) => []);
 
-/// 聊天会话列表 Provider
+/// Documentation.
 final chatSessionsProvider = StateProvider<List<ChatSession>>((ref) => []);
 
-/// AI 对话记录页面
+/// Documentation.
 class ChatPage extends ConsumerStatefulWidget {
   const ChatPage({super.key});
 
@@ -28,7 +28,7 @@ class ChatPage extends ConsumerStatefulWidget {
 }
 
 class _ChatPageState extends ConsumerState<ChatPage> {
-  /// 多选模式
+  /// Documentation.
   bool _isMultiSelectMode = false;
   final Set<String> _selectedSessionIds = {};
 
@@ -58,7 +58,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         mergedMap[s.id] = s;
       }
 
-      // 同时加载悬浮窗保存的聊天记录（使用正确的时间戳）
+      // Implementation detail.
       try {
         const channel = MethodChannel('com.yl.aigg/bridge');
         final result = await channel.invokeMethod('getOverlayChats');
@@ -66,7 +66,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           for (final chatData in result) {
             if (chatData is! Map) continue;
             final chatId = chatData['id'] as String? ?? '';
-            // 已存在于 mergedMap 中的跳过
+            // Implementation detail.
             if (mergedMap.containsKey(chatId)) continue;
 
             DateTime? sessionTime;
@@ -85,7 +85,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               final msgTime = tsMs != null
                   ? DateTime.fromMillisecondsSinceEpoch(tsMs)
                   : sessionTime;
-              final isUser = sender.contains('我');
+              final isUser = sender.contains('我') ||
+                  sender.contains('Me') ||
+                  sender.contains('User');
               if (isUser) {
                 messages.add(ChatMessage.user(message).copyWith(timestamp: msgTime));
               } else {
@@ -96,7 +98,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             if (messages.isNotEmpty) {
               final session = ChatSession.fromMessages(messages).copyWith(id: chatId);
               mergedMap[session.id] = session;
-              // 持久化到 Hive
+              // Implementation detail.
               await storage.saveSession(session);
             }
           }
@@ -121,7 +123,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     });
   }
 
-  /// 加载悬浮窗保存的聊天记录
+  /// Documentation.
   Future<void> _loadOverlayChats(List<ChatSession> existingSessions) async {
     try {
       const channel = MethodChannel('com.yl.aigg/bridge');
@@ -135,10 +137,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       for (final chatData in result) {
         if (chatData is! Map) continue;
         final chatId = chatData['id'] as String? ?? '';
-        // 已存在于 Hive 中的跳过，避免重复
+        // Implementation detail.
         if (existingIds.contains(chatId)) continue;
 
-        // 从 session ID 提取保存时间作为 fallback（chat_1748501234567 → 1748501234567）
+        // Implementation detail.
         DateTime? sessionTime;
         if (chatId.startsWith('chat_')) {
           final ms = int.tryParse(chatId.substring(5));
@@ -170,7 +172,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       }
 
       if (overlaySessions.isNotEmpty && mounted) {
-        // 持久化到 Hive，确保重启后时间戳不丢失
+        // Implementation detail.
         for (final s in overlaySessions) {
           await storage.saveSession(s);
         }
@@ -182,18 +184,18 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     } catch (_) {}
   }
 
-  /// 清空所有记录
+  /// Clear all records
   void _clearAllSessions() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFFFFFFFF),
-        title: const Text('清空所有记录'),
-        content: const Text('确定要清空所有对话记录吗？此操作不可撤销。'),
+        title: const Text('Clear all records'),
+        content: const Text('Clear all chat records? This cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -209,24 +211,24 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               if (mounted) {
                 ScaffoldMessenger.of(
                   context,
-                ).showSnackBar(const SnackBar(content: Text('✅ 所有对话记录已清空')));
+                ).showSnackBar(const SnackBar(content: Text('✅ All chat records cleared')));
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('清空'),
+            child: const Text('Clear'),
           ),
         ],
       ),
     );
   }
 
-  /// 生成 Markdown 内容
+  /// Documentation.
   String _generateMarkdown(ChatSession session) {
     final buffer = StringBuffer();
     buffer.writeln('# ${session.title}');
     buffer.writeln();
-    buffer.writeln('> 创建时间: ${session.createdAt.toString().substring(0, 19)}');
-    buffer.writeln('> 更新时间: ${session.updatedAt.toString().substring(0, 19)}');
+    buffer.writeln('> Created: ${session.createdAt.toString().substring(0, 19)}');
+    buffer.writeln('> Updated: ${session.updatedAt.toString().substring(0, 19)}');
     buffer.writeln('> ${session.summary}');
     buffer.writeln();
     buffer.writeln('---');
@@ -234,7 +236,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
     for (final msg in session.messages) {
       if (msg.isUser) {
-        buffer.writeln('## 👤 用户');
+        buffer.writeln('## 👤 User');
       } else {
         buffer.writeln('## 🤖 GG-AI');
       }
@@ -245,11 +247,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       buffer.writeln();
     }
 
-    buffer.writeln('*导出时间: ${DateTime.now().toString().substring(0, 19)}*');
+    buffer.writeln('*Exported: ${DateTime.now().toString().substring(0, 19)}*');
     return buffer.toString();
   }
 
-  /// 导出单条会话到文件
+  /// Documentation.
   Future<void> _exportSingleSession(ChatSession session) async {
     try {
       final markdown = _generateMarkdown(session);
@@ -269,25 +271,25 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('✅ 已导出到: $filePath')));
+        ).showSnackBar(SnackBar(content: Text('✅ Exported to: $filePath')));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('❌ 导出失败: $e')));
+        ).showSnackBar(SnackBar(content: Text('❌ Export failed: $e')));
       }
     }
   }
 
-  /// 导出多条会话到文件
+  /// Documentation.
   Future<void> _exportMultipleSessions(List<ChatSession> sessions) async {
     try {
       final buffer = StringBuffer();
-      buffer.writeln('# GG-AI 对话记录批量导出');
+      buffer.writeln('# GG-AI Bulk export of GG-AI chat history');
       buffer.writeln();
-      buffer.writeln('> 导出时间: ${DateTime.now().toString().substring(0, 19)}');
-      buffer.writeln('> 共 ${sessions.length} 个会话');
+      buffer.writeln('> Exported: ${DateTime.now().toString().substring(0, 19)}');
+      buffer.writeln('> ${sessions.length} sessions');
       buffer.writeln();
       buffer.writeln('---');
       buffer.writeln();
@@ -300,7 +302,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       }
 
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final fileName = 'GG-AI_批量导出_$timestamp.md';
+      final fileName = 'GG-AI_bulk export _$timestamp.md';
 
       const channel = MethodChannel('com.yl.aigg/bridge');
       final filePath = await channel.invokeMethod('exportChatToFile', {
@@ -310,25 +312,25 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ 已导出 ${sessions.length} 个会话到: $filePath')),
+          SnackBar(content: Text('✅ export  ${sessions.length}  sessions to: $filePath')),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('❌ 导出失败: $e')));
+        ).showSnackBar(SnackBar(content: Text('❌ Export failed: $e')));
       }
     }
   }
 
-  /// 显示导出选项对话框
+  /// Documentation.
   void _showExportDialog() {
     final sessions = ref.read(chatSessionsProvider);
     if (sessions.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('没有对话记录可导出')));
+      ).showSnackBar(const SnackBar(content: Text('No chat records to export')));
       return;
     }
 
@@ -336,7 +338,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFFFFFFFF),
-        title: const Text('导出对话记录'),
+        title: const Text('Export chat records'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -345,8 +347,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 Icons.file_download,
                 color: Color(0xFF3D5AFE),
               ),
-              title: const Text('导出全部到文件'),
-              subtitle: Text('将 ${sessions.length} 个会话导出为 Markdown 文件'),
+              title: const Text('Export all to file'),
+              subtitle: Text('Export ${sessions.length} sessions as a Markdown file'),
               onTap: () {
                 Navigator.pop(context);
                 _exportMultipleSessions(sessions);
@@ -354,8 +356,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             ),
             ListTile(
               leading: const Icon(Icons.checklist, color: Color(0xFF536DFE)),
-              title: const Text('选择导出'),
-              subtitle: const Text('选择要导出的会话'),
+              title: const Text('Choose export'),
+              subtitle: const Text('Choose sessions to export'),
               onTap: () {
                 Navigator.pop(context);
                 setState(() {
@@ -370,16 +372,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     );
   }
 
-  /// 刷新会话列表
+  /// Documentation.
   void _refreshSessions() {
     _reloadSessions();
-    // 延迟显示提示，等待异步加载完成
+    // Implementation detail.
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
         final sessions = ref.read(chatSessionsProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ 已刷新，共 ${sessions.length} 个会话'),
+            content: Text('✅ Refreshed; ${sessions.length} sessions'),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -403,12 +405,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     return Scaffold(
       appBar: AppBar(
         title: _isMultiSelectMode
-            ? Text('已选择 ${_selectedSessionIds.length} 项')
+            ? Text('Select ${_selectedSessionIds.length} items')
             : const Row(
                 children: [
                   Icon(Icons.history, color: Color(0xFF3D5AFE)),
                   SizedBox(width: 8),
-                  Text('对话记录'),
+                  Text('Chat History'),
                 ],
               ),
         leading: _isMultiSelectMode
@@ -424,7 +426,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             : null,
         actions: _isMultiSelectMode
             ? [
-                // 全选/取消全选
+                // Select all/Deselect all
                 IconButton(
                   icon: Icon(
                     _selectedSessionIds.length == sessions.length
@@ -432,8 +434,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                         : Icons.select_all,
                   ),
                   tooltip: _selectedSessionIds.length == sessions.length
-                      ? '取消全选'
-                      : '全选',
+                      ? 'Deselect all'
+                      : 'Select all',
                   onPressed: () {
                     setState(() {
                       if (_selectedSessionIds.length == sessions.length) {
@@ -444,10 +446,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     });
                   },
                 ),
-                // 导出选中项
+                // Export selected
                 IconButton(
                   icon: const Icon(Icons.file_download),
-                  tooltip: '导出选中项',
+                  tooltip: 'Export selected',
                   onPressed: _selectedSessionIds.isEmpty
                       ? null
                       : () {
@@ -463,34 +465,34 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 ),
               ]
             : [
-                // 刷新按钮
+                // refresh button
                 IconButton(
                   icon: const Icon(Icons.refresh),
-                  tooltip: '刷新对话记录',
+                  tooltip: 'Refresh chat records',
                   onPressed: _refreshSessions,
                 ),
-                // 导出按钮
+                // export button
                 IconButton(
                   icon: const Icon(Icons.download),
-                  tooltip: '导出对话记录',
+                  tooltip: 'Export chat records',
                   onPressed: _showExportDialog,
                 ),
-                // 清空按钮
+                // Clearbutton
                 IconButton(
                   icon: const Icon(Icons.delete_sweep),
-                  tooltip: '清空所有记录',
+                  tooltip: 'Clear all records',
                   onPressed: _clearAllSessions,
                 ),
-                // 悬浮窗按钮
+                // Overlaybutton
                 IconButton(
                   icon: const Icon(Icons.chat_bubble),
-                  tooltip: '启动悬浮窗对话',
+                  tooltip: 'Start overlay chat',
                   onPressed: () {
                     const channel = MethodChannel('com.yl.aigg/bridge');
                     channel.invokeMethod('startOverlay');
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('💡 悬浮窗已启动，点击悬浮球 → AI 对话'),
+                        content: Text('💡 Overlay started. Tap the bubble → AI Chat'),
                         duration: Duration(seconds: 3),
                       ),
                     );
@@ -500,7 +502,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       ),
       body: Column(
         children: [
-          // 功能说明卡片
+          // Implementation detail.
           Container(
             margin: const EdgeInsets.all(12),
             padding: const EdgeInsets.all(16),
@@ -523,7 +525,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     ),
                     SizedBox(width: 8),
                     Text(
-                      '使用说明',
+                      'Instructions',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF3D5AFE),
@@ -533,12 +535,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  '• 实时对话：使用悬浮窗中的 AI 对话功能\n'
-                  '• 历史记录：在此页面查看所有对话历史\n'
-                  '• 游戏中使用：悬浮窗更适合游戏内快速对话\n'
-                  '• 手动刷新：悬浮窗保存聊天后，点击右上角 🔄 刷新按钮\n'
-                  '• 导出记录：仅支持单条记录导出为 Markdown 文件\n'
-                  '• 导出路径：安卓10 /AI-gg/  安卓11+ /Documents/AI-gg/',
+                  '• • Live chat: use AI Chat in the overlay\n'
+                  '• • History: view all chat history here\n'
+                  '• • In-game use: the overlay is better for quick chats\n'
+                  '• • Manual refresh: after the overlay saves a chat, tap the 🔄 refresh button\n'
+                  '• • Export: only individual chats can be exported as Markdown\n'
+                  '• • Export paths: Android 10 /AI-gg/; Android 11+ /Documents/AI-gg/',
                   style: TextStyle(color: Color(0xFF4A6572), fontSize: 13),
                 ),
                 const SizedBox(height: 12),
@@ -551,7 +553,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                           channel.invokeMethod('startOverlay');
                         },
                         icon: const Icon(Icons.chat_bubble, size: 16),
-                        label: const Text('启动悬浮窗对话'),
+                        label: const Text('Start overlay chat'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF3D5AFE),
                           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -564,7 +566,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             ),
           ),
 
-          // 会话列表
+          // Implementation detail.
           Expanded(
             child: sessions.isEmpty
                 ? const Center(
@@ -573,10 +575,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       children: [
                         Icon(Icons.history, size: 64, color: Color(0xFF4A6572)),
                         SizedBox(height: 16),
-                        Text('暂无对话记录', style: TextStyle(color: Color(0xFF4A6572))),
+                        Text('No chat records', style: TextStyle(color: Color(0xFF4A6572))),
                         SizedBox(height: 8),
                         Text(
-                          '使用悬浮窗开始与 AI 对话',
+                          'Use the overlay to start an AI chat',
                           style: TextStyle(color: Color(0xFF4A6572), fontSize: 12),
                         ),
                       ],
@@ -592,7 +594,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   ),
           ),
 
-          // 统计信息
+          // Implementation detail.
           if (sessions.isNotEmpty)
             Container(
               padding: const EdgeInsets.all(12),
@@ -602,12 +604,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   const Icon(Icons.analytics, size: 16, color: Color(0xFF4A6572)),
                   const SizedBox(width: 8),
                   Text(
-                    '共 ${sessions.length} 个对话会话',
+                    '${sessions.length} chat sessions',
                     style: const TextStyle(color: Color(0xFF4A6572), fontSize: 12),
                   ),
                   const Spacer(),
                   Text(
-                    '最后更新: ${DateTime.now().toString().substring(0, 16)}',
+                    'Last updated: ${DateTime.now().toString().substring(0, 16)}',
                     style: const TextStyle(color: Color(0xFF4A6572), fontSize: 12),
                   ),
                 ],
@@ -686,7 +688,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  '${session.messages.length} 条消息',
+                  '${session.messages.length}  messages',
                   style: TextStyle(color: Color(0xFF4A6572), fontSize: 12),
                 ),
               ],
@@ -703,7 +705,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       children: [
                         Icon(Icons.file_download, size: 16),
                         SizedBox(width: 8),
-                        Text('导出为 Markdown'),
+                        Text('Export as Markdown'),
                       ],
                     ),
                   ),
@@ -713,7 +715,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       children: [
                         Icon(Icons.delete, size: 16, color: Colors.red),
                         SizedBox(width: 8),
-                        Text('删除', style: TextStyle(color: Colors.red)),
+                        Text('Delete', style: TextStyle(color: Colors.red)),
                       ],
                     ),
                   ),
@@ -757,12 +759,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFFFFFFFF),
-        title: const Text('删除对话'),
-        content: Text('确定要删除 "${session.title}" 吗？'),
+        title: const Text('Delete chat'),
+        content: Text('Delete "${session.title}" ?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -772,7 +774,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   .toList();
               final storage = ref.read(storageServiceProvider);
               await storage.deleteSession(session.id);
-              // 如果是悬浮窗保存的记录，同时从 Kotlin SharedPreferences 删除
+              // Implementation detail.
               if (session.id.startsWith('chat_')) {
                 try {
                   const channel = MethodChannel('com.yl.aigg/bridge');
@@ -782,7 +784,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('删除'),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -792,15 +794,15 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   IconData _getSessionIcon(String title) {
     if (title.contains('💰') || title.contains('金币')) {
       return Icons.monetization_on;
-    } else if (title.contains('❤️') || title.contains('血量')) {
+    } else if (title.contains('❤️') || title.contains('血量') || title.contains('health')) {
       return Icons.favorite;
-    } else if (title.contains('⚡') || title.contains('能量')) {
+    } else if (title.contains('⚡') || title.contains('energy')) {
       return Icons.flash_on;
-    } else if (title.contains('📜') || title.contains('脚本')) {
+    } else if (title.contains('📜') || title.contains('Script')) {
       return Icons.code;
-    } else if (title.contains('🔍') || title.contains('搜索')) {
+    } else if (title.contains('🔍') || title.contains('Search')) {
       return Icons.search;
-    } else if (title.contains('❓') || title.contains('帮助')) {
+    } else if (title.contains('❓') || title.contains('help ')) {
       return Icons.help;
     } else {
       return Icons.chat;
@@ -808,7 +810,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   }
 }
 
-/// 对话会话详情页面
+/// Documentation.
 class ChatSessionDetailPage extends StatefulWidget {
   final ChatSession session;
 
@@ -827,26 +829,26 @@ class _ChatSessionDetailPageState extends State<ChatSessionDetailPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.file_download),
-            tooltip: '导出为 Markdown',
+            tooltip: 'Export as Markdown',
             onPressed: () async {
               try {
                 final buffer = StringBuffer();
                 buffer.writeln('# ${widget.session.title}');
                 buffer.writeln();
-                buffer.writeln('> 创建时间: ${widget.session.createdAt.toString().substring(0, 19)}');
+                buffer.writeln('> Created: ${widget.session.createdAt.toString().substring(0, 19)}');
                 buffer.writeln('> ${widget.session.summary}');
                 buffer.writeln();
                 buffer.writeln('---');
                 buffer.writeln();
                 for (final msg in widget.session.messages) {
-                  buffer.writeln('## ${msg.isUser ? "👤 用户" : "🤖 GG-AI"}');
+                  buffer.writeln('## ${msg.isUser ? "👤 User" : "🤖 GG-AI"}');
                   buffer.writeln();
                   buffer.writeln(msg.content);
                   buffer.writeln();
                   buffer.writeln('---');
                   buffer.writeln();
                 }
-                buffer.writeln('*导出时间: ${DateTime.now().toString().substring(0, 19)}*');
+                buffer.writeln('*Exported: ${DateTime.now().toString().substring(0, 19)}*');
 
                 final safeTitle = widget.session.title.replaceAll(RegExp(r'[^\w\u4e00-\u9fa5]'), '_');
                 final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -856,36 +858,36 @@ class _ChatSessionDetailPageState extends State<ChatSessionDetailPage> {
                 final filePath = await channel.invokeMethod('exportChatToFile', {'fileName': fileName, 'content': buffer.toString()});
 
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✅ 已导出到: $filePath')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✅ Exported to: $filePath')));
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ 导出失败: $e')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Export failed: $e')));
                 }
               }
             },
           ),
           IconButton(
             icon: const Icon(Icons.copy),
-            tooltip: '复制到剪贴板',
+            tooltip: 'Copy to clipboard',
             onPressed: () {
               final exportText =
                   '=== ${widget.session.title} ===\n'
-                  '时间: ${widget.session.createdAt.toString().substring(0, 19)}\n\n'
+                  'Time:  ${widget.session.createdAt.toString().substring(0, 19)}\n\n'
                   '${widget.session.messages.map((msg) {
-                    final role = msg.isUser ? '用户' : 'AI助手';
+                    final role = msg.isUser ? 'User' : 'AI assistant';
                     return '$role: ${msg.content}';
                   }).join('\n\n')}';
 
               Clipboard.setData(ClipboardData(text: exportText));
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ 对话已复制到剪贴板')));
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ Chat copied to clipboard')));
             },
           ),
         ],
       ),
       body: Column(
         children: [
-          // 会话信息
+          // Implementation detail.
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -895,11 +897,11 @@ class _ChatSessionDetailPageState extends State<ChatSessionDetailPage> {
               children: [
                 Text(widget.session.summary, style: const TextStyle(color: Color(0xFF4A6572))),
                 const SizedBox(height: 4),
-                Text('创建时间: ${widget.session.createdAt.toString().substring(0, 19)}', style: const TextStyle(color: Color(0xFF4A6572), fontSize: 12)),
+                Text('Created: ${widget.session.createdAt.toString().substring(0, 19)}', style: const TextStyle(color: Color(0xFF4A6572), fontSize: 12)),
               ],
             ),
           ),
-          // 单 WebView 渲染所有消息
+          // Implementation detail.
           Expanded(
             child: MarkdownWebView(
               messages: widget.session.messages,

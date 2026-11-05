@@ -1,5 +1,5 @@
-/// 对话会话模型
-/// 用于管理和显示对话记录
+/// Documentation.
+/// Documentation.
 
 import 'chat_message.dart';
 
@@ -20,25 +20,25 @@ class ChatSession {
     this.summary = '',
   });
 
-  /// 从消息列表创建会话
+  /// Documentation.
   factory ChatSession.fromMessages(List<ChatMessage> messages) {
     if (messages.isEmpty) {
       return ChatSession(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: '空对话',
+        title: 'Empty conversation',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
         messages: [],
       );
     }
 
-    // 生成标题（基于第一条用户消息）
-    String title = '新对话';
+    // Implementation detail.
+    String title = 'New conversation';
     final firstUserMessage = messages.firstWhere(
       (msg) => msg.isUser,
       orElse: () => messages.first,
     );
-    
+
     if (firstUserMessage.content.isNotEmpty) {
       title = _generateTitle(firstUserMessage.content);
     }
@@ -53,26 +53,26 @@ class ChatSession {
     );
   }
 
-  /// 生成对话标题
+  /// Documentation.
   static String _generateTitle(String firstMessage) {
-    // 移除多余的空白字符
+    // Implementation detail.
     String cleaned = firstMessage.trim().replaceAll(RegExp(r'\s+'), ' ');
-    
-    // 根据内容生成合适的标题
-    if (cleaned.contains('金币') || cleaned.contains('钱')) {
-      return '💰 金币修改';
-    } else if (cleaned.contains('血量') || cleaned.contains('生命') || cleaned.contains('HP')) {
-      return '❤️ 血量修改';
-    } else if (cleaned.contains('能量') || cleaned.contains('MP') || cleaned.contains('魔法')) {
-      return '⚡ 能量修改';
-    } else if (cleaned.contains('脚本') || cleaned.contains('代码')) {
-      return '📜 脚本生成';
-    } else if (cleaned.contains('搜索') || cleaned.contains('查找')) {
-      return '🔍 内存搜索';
-    } else if (cleaned.contains('帮助') || cleaned.contains('help')) {
-      return '❓ 使用帮助';
+
+    // Implementation detail.
+    if (cleaned.contains('金币') || cleaned.contains('money')) {
+      return '💰 Coin modification';
+    } else if (cleaned.contains('血量') || cleaned.contains('health') || cleaned.contains('生命') || cleaned.contains('life') || cleaned.contains('HP')) {
+      return '❤️ Health modification';
+    } else if (cleaned.contains('能量') || cleaned.contains('energy') || cleaned.contains('MP') || cleaned.contains('魔法') || cleaned.contains('magic')) {
+      return '⚡ Energy modification';
+    } else if (cleaned.contains('脚本') || cleaned.contains('Script') || cleaned.contains('代码')) {
+      return '📜 Script generation';
+    } else if (cleaned.contains('搜索') || cleaned.contains('Search') || cleaned.contains('查找') || cleaned.contains('find')) {
+      return '🔍 Memory search';
+    } else if (cleaned.contains('help ') || cleaned.contains('help')) {
+      return '❓ Usage help';
     } else {
-      // 截取前20个字符作为标题
+      // Implementation detail.
       if (cleaned.length > 20) {
         return cleaned.substring(0, 20) + '...';
       }
@@ -80,49 +80,49 @@ class ChatSession {
     }
   }
 
-  /// 生成对话摘要
+  /// Documentation.
   static String _generateSummary(List<ChatMessage> messages) {
     if (messages.isEmpty) return '';
-    
+
     final userMessages = messages.where((msg) => msg.isUser).length;
     final aiMessages = messages.where((msg) => !msg.isUser).length;
-    
-    return '$userMessages 条用户消息，$aiMessages 条 AI 回复';
+
+    return '$userMessages  user messages, $aiMessages AI replies';
   }
 
-  /// 格式化时间显示
+  /// Documentation.
   String get formattedTime {
     final now = DateTime.now();
     final diff = now.difference(updatedAt);
-    
+
     if (diff.inMinutes < 1) {
-      return '刚刚';
+      return 'just now';
     } else if (diff.inHours < 1) {
-      return '${diff.inMinutes} 分钟前';
+      return '${diff.inMinutes}  minutes ago';
     } else if (diff.inDays < 1) {
-      return '${diff.inHours} 小时前';
+      return '${diff.inHours}  hours ago';
     } else if (diff.inDays < 7) {
-      return '${diff.inDays} 天前';
+      return '${diff.inDays}  days ago';
     } else {
       return '${updatedAt.month}/${updatedAt.day}';
     }
   }
 
-  /// 获取预览文本
+  /// Documentation.
   String get previewText {
-    if (messages.isEmpty) return '暂无消息';
-    
+    if (messages.isEmpty) return 'No messages';
+
     final lastMessage = messages.last;
     String preview = lastMessage.content.trim().replaceAll(RegExp(r'\s+'), ' ');
-    
+
     if (preview.length > 50) {
       preview = preview.substring(0, 50) + '...';
     }
-    
+
     return preview;
   }
 
-  /// 复制会话
+  /// Documentation.
   ChatSession copyWith({
     String? id,
     String? title,
@@ -141,7 +141,7 @@ class ChatSession {
     );
   }
 
-  /// 转换为 JSON
+  /// Documentation.
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -153,7 +153,7 @@ class ChatSession {
     };
   }
 
-  /// 从 JSON 创建
+  /// Documentation.
   factory ChatSession.fromJson(Map<String, dynamic> json) {
     return ChatSession(
       id: json['id'] as String,

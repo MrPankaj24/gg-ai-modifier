@@ -1,28 +1,28 @@
-/// Skill 数据模型
+/// Skill data model
 
 class SkillModel {
-  /// 唯一标识
+  /// Documentation.
   final String id;
 
-  /// 显示名称
+  /// Display name
   final String name;
 
-  /// Skill 内容（Markdown 格式）
+  /// Documentation.
   final String content;
 
-  /// 文件路径
+  /// Documentation.
   final String filePath;
 
-  /// 是否启用
+  /// Documentation.
   final bool isEnabled;
 
-  /// 是否为系统内置
+  /// whether  to Built-in
   final bool isBuiltin;
 
-  /// 创建时间
+  /// Documentation.
   final DateTime createdAt;
 
-  /// 更新时间
+  /// Documentation.
   final DateTime updatedAt;
 
   const SkillModel({

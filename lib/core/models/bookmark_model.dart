@@ -1,44 +1,44 @@
-/// 书签模型
-/// 用户标记的确定基址（如"金币"、"等级"等）
+/// Documentation.
+/// Documentation.
 
 class BookmarkModel {
-  /// 书签 ID
+  /// Documentation.
   final String id;
 
-  /// 书签名称（如"金币"、"等级"）
+  /// Documentation.
   final String name;
 
-  /// 内存地址
+  /// memoryaddress
   final String address;
 
-  /// 地址的数值表示
+  /// Documentation.
   final int addressInt;
 
-  /// 数据类型
+  /// data type
   final String dataType;
 
-  /// 当前值（可选）
+  /// Documentation.
   final dynamic currentValue;
 
-  /// 冻结值（可选）
+  /// Documentation.
   final dynamic frozenValue;
 
-  /// 是否冻结
+  /// whether Freeze
   final bool isFrozen;
 
-  /// 关联的游戏包名
+  /// Documentation.
   final String? packageName;
 
-  /// 关联的进程 PID
+  /// Documentation.
   final int? pid;
 
-  /// 创建时间
+  /// Documentation.
   final DateTime createdAt;
 
-  /// 更新时间
+  /// Documentation.
   final DateTime updatedAt;
 
-  /// 备注
+  /// Documentation.
   final String? note;
 
   const BookmarkModel({

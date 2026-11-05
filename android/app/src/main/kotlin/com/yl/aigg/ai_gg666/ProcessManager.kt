@@ -7,28 +7,28 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 
 /**
- * 进程管理器
- * 使用 pm list packages 快速获取已安装应用，再查找对应 PID
- * 类似 GG 修改器的方式，瞬间出结果
+ * Implementation detail.
+ * Implementation detail.
+ * Implementation detail.
  */
 object ProcessManager {
 
     private var appInfoCache: Map<String, ApplicationInfo> = emptyMap()
 
     /**
-     * 获取运行中的应用进程列表
-     * 使用 pm + ps 快速获取，避免遍历 /proc
+     * Implementation detail.
+     * Implementation detail.
      */
     fun getProcessList(context: android.content.Context): List<Map<String, Any>> {
         val processes = mutableListOf<Map<String, Any>>()
 
         try {
-            // 获取已安装的第三方应用信息（用于显示APP名称）
+            // Implementation detail.
             val pm = context.packageManager
             val installedApps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
             appInfoCache = installedApps.associateBy { it.packageName }
 
-            // 使用 ps 命令快速获取运行中的进程
+            // Implementation detail.
             val psResult = RootManager.executeRootCommand("ps -A -o PID,NAME")
             if (psResult != null) {
                 for (line in psResult.lines()) {
@@ -41,7 +41,7 @@ object ProcessManager {
 
                     if (packageName.isEmpty() || !packageName.contains(".")) continue
 
-                    // 获取 APP 名称
+                    // Implementation detail.
                     val appName = getAppName(pm, packageName)
                     val isSystem = isSystemApp(packageName)
 
@@ -57,7 +57,7 @@ object ProcessManager {
                 }
             }
 
-            // 如果 ps 命令失败，尝试备用方案
+            // Implementation detail.
             if (processes.isEmpty()) {
                 return getProcessListFallback(context)
             }
@@ -69,13 +69,13 @@ object ProcessManager {
             .distinctBy { it["packageName"] as String }
             .sortedWith(compareBy<Map<String, Any>> {
                 val name = it["processName"] as String
-                // 中文名称排前面
+                // Implementation detail.
                 if (name.isNotEmpty() && name[0].code > 127) 0 else 1
             }.thenBy { it["processName"] as String })
     }
 
     /**
-     * 备用方案：使用 pm list packages + cat /proc/pid/cmdline
+     * Implementation detail.
      */
     private fun getProcessListFallback(context: android.content.Context): List<Map<String, Any>> {
         val processes = mutableListOf<Map<String, Any>>()
@@ -83,7 +83,7 @@ object ProcessManager {
         try {
             val pm = context.packageManager
 
-            // 获取所有运行中的进程 PID 和包名
+            // Implementation detail.
             val procResult = RootManager.executeRootCommand(
                 "for pid in /proc/[0-9]*; do " +
                 "p=\${pid##*/}; " +
@@ -128,7 +128,7 @@ object ProcessManager {
     }
 
     /**
-     * 获取 APP 显示名称
+     * Implementation detail.
      */
     private fun getAppName(pm: PackageManager, packageName: String): String {
         return try {
@@ -144,7 +144,7 @@ object ProcessManager {
     }
 
     /**
-     * 判断是否为系统应用
+     * Implementation detail.
      */
     private fun isSystemApp(packageName: String): Boolean {
         return packageName.startsWith("com.android.") ||

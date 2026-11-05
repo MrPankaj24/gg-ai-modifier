@@ -1,5 +1,5 @@
-/// 悬浮窗专用的 Flutter 应用
-/// 用于在悬浮窗中显示完整的功能页面
+/// Documentation.
+/// Documentation.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,10 +9,10 @@ import 'features/chat/chat_page.dart';
 import 'features/script/script_page.dart';
 import 'features/settings/settings_page.dart';
 
-/// 当前显示的页面 Provider
+/// Documentation.
 final overlayPageProvider = StateProvider<String>((ref) => 'chat');
 
-/// 悬浮窗应用
+/// Overlayapp
 class OverlayApp extends ConsumerStatefulWidget {
   const OverlayApp({super.key});
 

@@ -1,18 +1,18 @@
-/// 进程选择器页面
-/// 扫描运行中的进程并允许用户选择目标游戏
+/// Documentation.
+/// Documentation.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/process_info.dart';
 
-/// 当前附加的进程 Provider
+/// Documentation.
 final attachedProcessProvider = StateProvider<ProcessInfo?>((ref) => null);
 
-/// 进程列表 Provider
+/// Documentation.
 final processListProvider = StateProvider<List<ProcessInfo>>((ref) => []);
 
-/// 进程选择器页面
+/// Documentation.
 class ProcessSelectorPage extends ConsumerStatefulWidget {
   const ProcessSelectorPage({super.key});
 
@@ -37,9 +37,9 @@ class _ProcessSelectorPageState extends ConsumerState<ProcessSelectorPage> {
     try {
       const channel = MethodChannel('com.yl.aigg/bridge');
       final pid = await channel.invokeMethod('getAttachedPid');
-      
+
       if (pid != null && pid > 0 && mounted) {
-        // 有附加的进程，获取进程信息
+        // Implementation detail.
         final result = await channel.invokeMethod('getProcessList');
         if (result != null) {
           final List<dynamic> list = result as List<dynamic>;
@@ -47,20 +47,20 @@ class _ProcessSelectorPageState extends ConsumerState<ProcessSelectorPage> {
             final map = Map<String, dynamic>.from(item as Map);
             return ProcessInfo.fromJson(map);
           }).toList();
-          
-          // 找到对应的进程
+
+          // Implementation detail.
           final attachedProcess = processes.firstWhere(
             (p) => p.pid == pid,
             orElse: () => processes.first,
           );
-          
+
           if (mounted) {
             ref.read(attachedProcessProvider.notifier).state = attachedProcess;
           }
         }
       }
     } catch (e) {
-      // 忽略错误
+      // Implementation detail.
     }
   }
 
@@ -84,7 +84,7 @@ class _ProcessSelectorPageState extends ConsumerState<ProcessSelectorPage> {
           return ProcessInfo.fromJson(map);
         }).toList();
 
-        // 过滤掉系统进程，只显示应用进程
+        // Implementation detail.
         final appProcesses = processes
             .where(
               (p) =>
@@ -107,7 +107,7 @@ class _ProcessSelectorPageState extends ConsumerState<ProcessSelectorPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('获取进程列表失败: $e')));
+        ).showSnackBar(SnackBar(content: Text('Failed to get process list: $e')));
       }
     } finally {
       if (mounted) {
@@ -126,19 +126,19 @@ class _ProcessSelectorPageState extends ConsumerState<ProcessSelectorPage> {
       if (result == true && mounted) {
         ref.read(attachedProcessProvider.notifier).state = process;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ 已附加到 ${process.displayName}')),
+          SnackBar(content: Text('✅ Attached to ${process.displayName}')),
         );
         Navigator.pop(context, process);
       } else if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('❌ 附加进程失败')));
+        ).showSnackBar(const SnackBar(content: Text('❌ Failed to attach to process')));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('❌ 附加进程失败: $e')));
+        ).showSnackBar(SnackBar(content: Text('❌ Failed to attach to process: $e')));
       }
     }
   }
@@ -165,7 +165,7 @@ class _ProcessSelectorPageState extends ConsumerState<ProcessSelectorPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('选择游戏进程'),
+        title: const Text('Select game process'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -175,7 +175,7 @@ class _ProcessSelectorPageState extends ConsumerState<ProcessSelectorPage> {
       ),
       body: Column(
         children: [
-          // 当前附加状态
+          // Implementation detail.
           if (attachedProcess != null)
             Container(
               padding: const EdgeInsets.all(12),
@@ -189,7 +189,7 @@ class _ProcessSelectorPageState extends ConsumerState<ProcessSelectorPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '当前附加: ${attachedProcess.displayName}',
+                          'Currently attached: ${attachedProcess.displayName}',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
@@ -210,13 +210,13 @@ class _ProcessSelectorPageState extends ConsumerState<ProcessSelectorPage> {
                         ref.read(attachedProcessProvider.notifier).state = null;
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('已分离进程')),
+                            const SnackBar(content: Text('Process detached')),
                           );
                         }
                       } catch (_) {}
                     },
                     child: const Text(
-                      '分离',
+                      'Detach',
                       style: TextStyle(color: Colors.red),
                     ),
                   ),
@@ -224,13 +224,13 @@ class _ProcessSelectorPageState extends ConsumerState<ProcessSelectorPage> {
               ),
             ),
 
-          // 搜索栏
+          // Implementation detail.
           Padding(
             padding: const EdgeInsets.all(12),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: '搜索游戏名称或包名...',
+                hintText: 'Search game name or package name...',
                 prefixIcon: const Icon(Icons.search, size: 16),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
@@ -248,13 +248,13 @@ class _ProcessSelectorPageState extends ConsumerState<ProcessSelectorPage> {
             ),
           ),
 
-          // 进程数量
+          // Implementation detail.
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: [
                 Text(
-                  '找到 ${filteredProcesses.length} 个应用进程',
+                  'Found ${filteredProcesses.length} app processes',
                   style: const TextStyle(color: Color(0xFF4A6572), fontSize: 12),
                 ),
                 const Spacer(),
@@ -269,7 +269,7 @@ class _ProcessSelectorPageState extends ConsumerState<ProcessSelectorPage> {
           ),
           const SizedBox(height: 8),
 
-          // 进程列表
+          // Implementation detail.
           Expanded(
             child: _isLoading && processes.isEmpty
                 ? const Center(
@@ -278,7 +278,7 @@ class _ProcessSelectorPageState extends ConsumerState<ProcessSelectorPage> {
                       children: [
                         CircularProgressIndicator(),
                         SizedBox(height: 16),
-                        Text('正在扫描进程...', style: TextStyle(color: Color(0xFF4A6572))),
+                        Text('Scanning processes...', style: TextStyle(color: Color(0xFF4A6572))),
                       ],
                     ),
                   )
@@ -289,10 +289,10 @@ class _ProcessSelectorPageState extends ConsumerState<ProcessSelectorPage> {
                       children: [
                         Icon(Icons.apps, size: 64, color: Color(0xFF4A6572)),
                         SizedBox(height: 16),
-                        Text('未找到应用进程', style: TextStyle(color: Color(0xFF4A6572))),
+                        Text('No app processes found', style: TextStyle(color: Color(0xFF4A6572))),
                         SizedBox(height: 8),
                         Text(
-                          '请确保已打开游戏应用',
+                          'Make sure the game is open',
                           style: TextStyle(color: Color(0xFF4A6572), fontSize: 12),
                         ),
                       ],
@@ -330,7 +330,7 @@ class _ProcessSelectorPageState extends ConsumerState<ProcessSelectorPage> {
                         trailing: isAttached
                             ? const Chip(
                                 label: Text(
-                                  '已附加',
+                                  'Attached',
                                   style: TextStyle(
                                     fontSize: 10,
                                     color: Color(0xFF213333),

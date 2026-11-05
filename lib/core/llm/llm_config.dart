@@ -1,26 +1,26 @@
-/// LLM 配置管理
+/// Documentation.
 
-/// LLM API 配置
+/// LLM API Configuration
 class LlmConfig {
-  /// API 基础地址
+  /// Documentation.
   final String baseUrl;
 
-  /// API 密钥
+  /// Documentation.
   final String apiKey;
 
-  /// 模型名称
+  /// Model name
   final String model;
 
-  /// 温度参数 (0.0 - 2.0)
+  /// Documentation.
   final double temperature;
 
-  /// 最大 token 数
+  /// Documentation.
   final int maxTokens;
 
-  /// 是否启用流式响应
+  /// Documentation.
   final bool streamEnabled;
 
-  /// 请求超时时间 (秒)
+  /// Documentation.
   final int timeoutSeconds;
 
   const LlmConfig({
@@ -53,22 +53,22 @@ class LlmConfig {
     );
   }
 
-  /// 是否已配置
+  /// Documentation.
   bool get isConfigured => baseUrl.isNotEmpty && apiKey.isNotEmpty;
 
-  /// 是否是 Google Gemini API
+  /// Documentation.
   bool get isGemini => baseUrl.contains('generativelanguage.googleapis.com');
 
-  /// API 完整地址（Gemini 使用 OpenAI 兼容接口）
+  /// Documentation.
   String get chatEndpoint => '$baseUrl/chat/completions';
 
-  /// 流式 API 完整地址
+  /// Documentation.
   String get streamEndpoint => '$baseUrl/chat/completions';
 
-  /// 获取实际请求的 baseUrl（Gemini 自动添加 /v1beta/openai/）
+  /// Documentation.
   String get effectiveBaseUrl {
     if (isGemini) {
-      // Gemini OpenAI 兼容接口: https://generativelanguage.googleapis.com/v1beta/openai/
+      // Implementation detail.
       final base = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
       return '$base/v1beta/openai';
     }
@@ -99,7 +99,7 @@ class LlmConfig {
     );
   }
 
-  /// 预设配置
+  /// Documentation.
   static const presets = {
     'deepseek': LlmConfig(
       baseUrl: 'https://api.deepseek.com',
@@ -128,7 +128,7 @@ class LlmConfig {
     ),
   };
 
-  /// 获取预设配置列表
+  /// Documentation.
   static List<MapEntry<String, LlmConfig>> get presetList {
     return presets.entries.toList();
   }

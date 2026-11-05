@@ -1,26 +1,26 @@
-/// 值编辑器组件
-/// 支持多种数据类型的值输入和编辑
+/// Documentation.
+/// Documentation.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/models/memory_result.dart';
 import '../core/ffi/memory_types.dart';
 
-/// 值编辑器组件
+/// Documentation.
 class ValueEditor extends StatefulWidget {
-  /// 数据类型
+  /// data type
   final DataType dataType;
 
-  /// 值变化回调
+  /// Documentation.
   final ValueChanged<dynamic>? onValueChanged;
 
-  /// 初始值
+  /// Documentation.
   final dynamic initialValue;
 
-  /// 标签
+  /// Documentation.
   final String? label;
 
-  /// 是否只读
+  /// Documentation.
   final bool readOnly;
 
   const ValueEditor({
@@ -103,7 +103,7 @@ class _ValueEditorState extends State<ValueEditor> {
           ),
         Row(
           children: [
-            // 数据类型标签
+            // Implementation detail.
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
@@ -120,7 +120,7 @@ class _ValueEditorState extends State<ValueEditor> {
               ),
             ),
             const SizedBox(width: 8),
-            // 值输入框
+            // Implementation detail.
             Expanded(
               child: TextField(
                 controller: _controller,
@@ -159,7 +159,7 @@ class _ValueEditorState extends State<ValueEditor> {
       case DataType.double:
         return '3.14159265358979';
       case DataType.string:
-        return '输入字符串';
+        return 'Enter text';
     }
   }
 

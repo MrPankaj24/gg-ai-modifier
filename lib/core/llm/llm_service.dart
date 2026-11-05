@@ -1,6 +1,6 @@
-/// LLM API 调用服务
+/// Documentation.
 ///
-/// 支持 OpenAI 兼容 API（包括 Gemini OpenAI 兼容接口）
+/// Documentation.
 
 import 'dart:async';
 import 'dart:convert';
@@ -10,7 +10,7 @@ import '../models/chat_message.dart';
 import 'function_handler.dart';
 import 'prompt_builder.dart';
 
-/// LLM 服务类
+/// Documentation.
 class LlmService {
   LlmConfig _config;
   final FunctionHandler _functionHandler;
@@ -29,32 +29,32 @@ class LlmService {
     promptBuilder.setModelName(config.model);
   }
 
-  /// 当前配置
+  /// Documentation.
   LlmConfig get config => _config;
 
-  /// 是否正在流式响应
+  /// Documentation.
   bool get isStreaming => _isStreaming;
 
-  /// 更新配置
+  /// Documentation.
   void updateConfig(LlmConfig newConfig) {
     _config = newConfig;
     _promptBuilder.setModelName(newConfig.model);
   }
 
-  /// 获取实际请求的 URL
+  /// Documentation.
   String _getEndpoint() {
-    // Gemini 使用 OpenAI 兼容接口: /v1beta/openai/chat/completions
+    // Implementation detail.
     final base = _config.effectiveBaseUrl.trimRight('/');
     return '$base/chat/completions';
   }
 
-  /// 发送聊天消息 (非流式)
+  /// Documentation.
   Future<ChatMessage> sendMessage(
     String userMessage, {
     List<ChatMessage> history = const [],
   }) async {
     if (!_config.isConfigured) {
-      return ChatMessage.assistant('⚠️ 请先在设置中配置 LLM API');
+      return ChatMessage.assistant('⚠️ Configure the LLM API in Settings first');
     }
 
     try {
@@ -66,18 +66,18 @@ class LlmService {
       final response = await _makeRequest(messages, stream: false);
 
       if (response == null) {
-        return ChatMessage.assistant('❌ 请求失败，请检查网络和 API 配置');
+        return ChatMessage.assistant('❌ Request failed; check the network and API configuration');
       }
 
       final choice = response['choices']?[0];
       if (choice == null) {
-        return ChatMessage.assistant('❌ 响应格式错误');
+        return ChatMessage.assistant('❌ Unexpected response format ');
       }
 
       final message = choice['message'];
       final content = message['content'] as String? ?? '';
 
-      // 检查是否有函数调用
+      // Implementation detail.
       if (message['tool_calls'] != null) {
         final toolCalls = message['tool_calls'] as List;
         if (toolCalls.isNotEmpty) {
@@ -85,10 +85,10 @@ class LlmService {
           final funcName = toolCall['function']['name'] as String;
           final funcArgs = jsonDecode(toolCall['function']['arguments'] as String);
 
-          // 执行函数调用
+          // Implementation detail.
           final result = await _functionHandler.executeFunction(funcName, funcArgs);
 
-          // 将结果返回给 LLM 生成总结
+          // Implementation detail.
           final summary = await _sendFunctionResult(
             funcName: funcName,
             arguments: funcArgs,
@@ -103,17 +103,17 @@ class LlmService {
 
       return ChatMessage.assistant(content);
     } catch (e) {
-      return ChatMessage.assistant('❌ 发生错误: $e');
+      return ChatMessage.assistant('❌ Error occurred: $e');
     }
   }
 
-  /// 发送聊天消息 (流式)
+  /// Documentation.
   Stream<String> sendMessageStream(
     String userMessage, {
     List<ChatMessage> history = const [],
   }) async* {
     if (!_config.isConfigured) {
-      yield '⚠️ 请先在设置中配置 LLM API';
+      yield '⚠️ Configure the LLM API in Settings first';
       return;
     }
 
@@ -141,7 +141,7 @@ class LlmService {
       final streamedResponse = await _getClient().send(request);
 
       if (streamedResponse.statusCode != 200) {
-        yield '❌ API 请求失败 (${streamedResponse.statusCode})';
+        yield '❌ API Request failed (${streamedResponse.statusCode})';
         _isStreaming = false;
         return;
       }
@@ -171,7 +171,7 @@ class LlmService {
                 if (toolCalls.isNotEmpty) {
                   final funcName = toolCalls[0]['function']?['name'] as String?;
                   if (funcName != null) {
-                    yield '\n\n🔧 正在执行: $funcName...\n';
+                    yield '\n\n🔧 Executing: $funcName...\n';
                   }
                 }
               }
@@ -182,18 +182,18 @@ class LlmService {
               }
             }
           } catch (e) {
-            // 忽略解析错误
+            // Implementation detail.
           }
         }
       }
     } catch (e) {
-      yield '\n\n❌ 流式响应错误: $e';
+      yield '\n\n❌ Streaming response error : $e';
     } finally {
       _isStreaming = false;
     }
   }
 
-  /// 发送函数执行结果给 LLM
+  /// Documentation.
   Future<ChatMessage> _sendFunctionResult({
     required String funcName,
     required Map<String, dynamic> arguments,
@@ -209,7 +209,7 @@ class LlmService {
         history: history,
       );
 
-      // 添加工具调用结果消息
+      // Implementation detail.
       if (toolCallId != null) {
         messages.add({
           'role': 'tool',
@@ -221,18 +221,18 @@ class LlmService {
       final response = await _makeRequest(messages, stream: false);
 
       if (response == null) {
-        return ChatMessage.assistant('函数执行完成，但无法获取 AI 总结');
+        return ChatMessage.assistant('Function completed, but no AI summary was available');
       }
 
       final content =
           response['choices']?[0]?['message']?['content'] as String? ?? '';
       return ChatMessage.assistant(content);
     } catch (e) {
-      return ChatMessage.assistant('函数执行完成: $result');
+      return ChatMessage.assistant('Function completed: $result');
     }
   }
 
-  /// 发送 API 请求
+  /// Documentation.
   Future<Map<String, dynamic>?> _makeRequest(
     List<Map<String, dynamic>> messages, {
     bool stream = false,
@@ -258,22 +258,22 @@ class LlmService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
       } else {
-        print('API 请求失败: ${response.statusCode} ${response.body}');
+        print('API Request failed: ${response.statusCode} ${response.body}');
         return null;
       }
     } catch (e) {
-      print('API 请求异常: $e');
+      print('API request error: $e');
       return null;
     }
   }
 
-  /// 获取 HTTP 客户端
+  /// Documentation.
   http.Client _getClient() {
     _httpClient ??= http.Client();
     return _httpClient!;
   }
 
-  /// 释放资源
+  /// Documentation.
   void dispose() {
     _httpClient?.close();
     _httpClient = null;

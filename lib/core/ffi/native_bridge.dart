@@ -1,16 +1,16 @@
-/// FFI 桥接层 - Flutter 与 C++ Native 代码通信
+/// Documentation.
 ///
-/// 由于 C++ Native 代码需要在 Android 端编译，
-/// 这里提供 Dart 侧的接口定义和模拟实现。
-/// 实际部署时通过 MethodChannel 或 dart:ffi 与 native 库通信。
+/// Documentation.
+/// Documentation.
+/// Documentation.
 
 import 'dart:async';
 import 'package:flutter/services.dart';
 import '../models/memory_result.dart';
 import '../models/process_info.dart';
 
-/// Native 桥接类
-/// 通过 MethodChannel 与 Android 原生代码通信
+/// Documentation.
+/// Documentation.
 class NativeBridge {
   static const MethodChannel _channel = MethodChannel('com.yl.aigg/bridge');
 
@@ -22,35 +22,35 @@ class NativeBridge {
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
 
-  /// 初始化桥接层
+  /// Documentation.
   Future<bool> initialize() async {
     try {
       _channel.setMethodCallHandler(_handleMethodCall);
       _isInitialized = true;
       return true;
     } catch (e) {
-      print('NativeBridge 初始化失败: $e');
+      print('NativeBridge initialization failed: $e');
       return false;
     }
   }
 
-  /// 处理来自原生层的回调
+  /// Documentation.
   Future<dynamic> _handleMethodCall(MethodCall call) async {
     switch (call.method) {
       case 'onMemoryChanged':
-        // 内存变化通知
+        // Implementation detail.
         break;
       case 'onProcessDied':
-        // 进程死亡通知
+        // Implementation detail.
         break;
       default:
-        throw MissingPluginException('未实现的方法: ${call.method}');
+        throw MissingPluginException('Method not implemented: ${call.method}');
     }
   }
 
-  // ==================== 进程管理 ====================
+  // Implementation detail.
 
-  /// 获取运行中的进程列表
+  /// Documentation.
   Future<List<ProcessInfo>> getProcessList() async {
     try {
       final result = await _channel.invokeMethod('getProcessList');
@@ -62,34 +62,34 @@ class NativeBridge {
         return ProcessInfo.fromJson(map);
       }).toList();
     } catch (e) {
-      print('获取进程列表失败: $e');
+      print('Failed to get process list: $e');
       return [];
     }
   }
 
-  /// 附加到目标进程
+  /// Documentation.
   Future<bool> attachProcess(int pid) async {
     try {
       final result = await _channel.invokeMethod('attachProcess', {'pid': pid});
       return result == true;
     } catch (e) {
-      print('附加进程失败: $e');
+      print('Failed to attach to process: $e');
       return false;
     }
   }
 
-  /// 分离当前进程
+  /// Detachcurrent process
   Future<bool> detachProcess() async {
     try {
       final result = await _channel.invokeMethod('detachProcess');
       return result == true;
     } catch (e) {
-      print('分离进程失败: $e');
+      print('Detachprocess failed : $e');
       return false;
     }
   }
 
-  /// 获取当前附加的进程 PID
+  /// Documentation.
   Future<int?> getAttachedPid() async {
     try {
       final result = await _channel.invokeMethod('getAttachedPid');
@@ -99,9 +99,9 @@ class NativeBridge {
     }
   }
 
-  // ==================== 内存搜索 ====================
+  // ==================== Memory search ====================
 
-  /// 精确搜索内存
+  /// ExactSearchmemory
   Future<List<MemoryResult>> searchExact(dynamic value, DataType type) async {
     try {
       final result = await _channel.invokeMethod('searchExact', {
@@ -116,12 +116,12 @@ class NativeBridge {
         return MemoryResult.fromJson(map);
       }).toList();
     } catch (e) {
-      print('精确搜索失败: $e');
+      print('ExactSearch failed: $e');
       return [];
     }
   }
 
-  /// 在之前的结果中过滤
+  /// Documentation.
   Future<List<MemoryResult>> filterResults(
     List<MemoryResult> previousResults,
     dynamic newValue,
@@ -141,12 +141,12 @@ class NativeBridge {
         return MemoryResult.fromJson(map);
       }).toList();
     } catch (e) {
-      print('过滤结果失败: $e');
+      print('Filtering results failed: $e');
       return [];
     }
   }
 
-  /// 范围搜索
+  /// RangeSearch
   Future<List<MemoryResult>> searchByRange(
     int minValue,
     int maxValue,
@@ -166,12 +166,12 @@ class NativeBridge {
         return MemoryResult.fromJson(map);
       }).toList();
     } catch (e) {
-      print('范围搜索失败: $e');
+      print('RangeSearch failed: $e');
       return [];
     }
   }
 
-  /// 模糊搜索（未知值搜索）
+  /// FuzzySearch (Unknownvalue Search)
   /// comparison: changed, unchanged, increased, decreased, greater, less, equal, not_equal
   Future<List<MemoryResult>> searchFuzzy(
     String comparison,
@@ -190,12 +190,12 @@ class NativeBridge {
         return MemoryResult.fromJson(map);
       }).toList();
     } catch (e) {
-      print('模糊搜索失败: $e');
+      print('FuzzySearch failed: $e');
       return [];
     }
   }
 
-  /// 特征码搜索 (AOB Scan)
+  /// SignatureSearch (AOB Scan)
   Future<List<MemoryResult>> searchAob(String pattern, {String? mask}) async {
     try {
       final result = await _channel.invokeMethod('searchAob', {
@@ -210,12 +210,12 @@ class NativeBridge {
         return MemoryResult.fromJson(map);
       }).toList();
     } catch (e) {
-      print('特征码搜索失败: $e');
+      print('SignatureSearch failed: $e');
       return [];
     }
   }
 
-  /// 特征码重定位（重启后使用）
+  /// Documentation.
   Future<List<MemoryResult>> relocateAob() async {
     try {
       final result = await _channel.invokeMethod('relocateAob');
@@ -227,14 +227,14 @@ class NativeBridge {
         return MemoryResult.fromJson(map);
       }).toList();
     } catch (e) {
-      print('特征码重定位失败: $e');
+      print('Signature relocation failed: $e');
       return [];
     }
   }
 
-  // ==================== 内存读写 ====================
+  // Implementation detail.
 
-  /// 读取内存值
+  /// read memoryvalue
   Future<dynamic> readMemory(int address, DataType type) async {
     try {
       final result = await _channel.invokeMethod('readMemory', {
@@ -243,12 +243,12 @@ class NativeBridge {
       });
       return result;
     } catch (e) {
-      print('读取内存失败: $e');
+      print('read memoryfailed : $e');
       return null;
     }
   }
 
-  /// 写入内存值
+  /// write memoryvalue
   Future<bool> writeMemory(int address, dynamic value, DataType type) async {
     try {
       final result = await _channel.invokeMethod('writeMemory', {
@@ -258,12 +258,12 @@ class NativeBridge {
       });
       return result == true;
     } catch (e) {
-      print('写入内存失败: $e');
+      print('write memoryfailed : $e');
       return false;
     }
   }
 
-  /// 批量写入
+  /// Documentation.
   Future<bool> writeBatch(List<WriteRequest> requests) async {
     try {
       final result = await _channel.invokeMethod('writeBatch', {
@@ -271,14 +271,14 @@ class NativeBridge {
       });
       return result == true;
     } catch (e) {
-      print('批量写入失败: $e');
+      print('Batch write failed: $e');
       return false;
     }
   }
 
-  // ==================== 内存冻结 ====================
+  // ==================== memoryFreeze ====================
 
-  /// 冻结内存地址
+  /// Freezememoryaddress
   Future<bool> freezeMemory(int address, dynamic value, DataType type) async {
     try {
       final result = await _channel.invokeMethod('freezeMemory', {
@@ -288,12 +288,12 @@ class NativeBridge {
       });
       return result == true;
     } catch (e) {
-      print('冻结内存失败: $e');
+      print('Freezememoryfailed : $e');
       return false;
     }
   }
 
-  /// 解除冻结
+  /// Documentation.
   Future<bool> unfreezeMemory(int address) async {
     try {
       final result = await _channel.invokeMethod('unfreezeMemory', {
@@ -301,12 +301,12 @@ class NativeBridge {
       });
       return result == true;
     } catch (e) {
-      print('解除冻结失败: $e');
+      print('Unfreeze failed: $e');
       return false;
     }
   }
 
-  /// 获取所有冻结地址
+  /// Documentation.
   Future<List<MemoryResult>> getFrozenAddresses() async {
     try {
       final result = await _channel.invokeMethod('getFrozenAddresses');
@@ -322,9 +322,9 @@ class NativeBridge {
     }
   }
 
-  // ==================== 内存区域 ====================
+  // Implementation detail.
 
-  /// 获取内存区域列表
+  /// Documentation.
   Future<List<MemoryRegion>> getMemoryRegions() async {
     try {
       final result = await _channel.invokeMethod('getMemoryRegions');
@@ -340,7 +340,7 @@ class NativeBridge {
     }
   }
 
-  /// 分析指定地址周围的内存区域
+  /// Documentation.
   Future<Map<String, dynamic>> analyzeMemoryRegion(
     int address, {
     int range = 256,
@@ -356,9 +356,9 @@ class NativeBridge {
     }
   }
 
-  // ==================== Root 权限 ====================
+  // ==================== Root Permission ====================
 
-  /// 检查 Root 权限
+  /// Documentation.
   Future<bool> checkRootAccess() async {
     try {
       final result = await _channel.invokeMethod('checkRootAccess');
@@ -368,7 +368,7 @@ class NativeBridge {
     }
   }
 
-  /// 请求 Root 权限
+  /// Documentation.
   Future<bool> requestRootAccess() async {
     try {
       final result = await _channel.invokeMethod('requestRootAccess');
@@ -378,7 +378,7 @@ class NativeBridge {
     }
   }
 
-  /// 释放资源
+  /// Documentation.
   void dispose() {
     _isInitialized = false;
   }

@@ -73,7 +73,7 @@ class _MarkdownWebViewState extends State<MarkdownWebView> {
     );
   }
 
-  // ==================== 单内容模式 ====================
+  // Implementation detail.
 
   static String _buildSingleHtml(String content) {
     final escaped = _escapeForJs(content);
@@ -89,7 +89,7 @@ $_jsCore
 })();''');
   }
 
-  // ==================== 多消息模式 ====================
+  // Implementation detail.
 
   static String _buildChatHtml(List<ChatMessage> messages) {
     final htmlBuf = StringBuffer();
@@ -106,7 +106,7 @@ $_jsCore
             .replaceAll('\n', '<br>');
         htmlBuf.write(
           '<div class="msg msg-user">'
-          '<div class="msg-header"><span class="msg-sender">我</span>'
+          '<div class="msg-header"><span class="msg-sender">Me</span>'
           '<span class="msg-time">$time</span></div>'
           '<div class="bubble bubble-user">$safe</div></div>');
       } else {
@@ -139,7 +139,7 @@ $_jsCore
 })();''', body: htmlBuf.toString());
   }
 
-  // ==================== 共用部分 ====================
+  // Implementation detail.
 
   static String _escapeForJs(String s) => s
       .replaceAll('\\', '\\\\')
@@ -191,7 +191,7 @@ $_jsCore
  '</body></html>';
   }
 
-  // JS 核心：marked 配置 + protectLaTeX + restoreLaTeX + renderMermaid + renderKatex
+  // Implementation detail.
   static const _jsCore = r"""
 mermaid.initialize({startOnLoad:false,theme:'dark'});
 var renderer=new marked.Renderer();

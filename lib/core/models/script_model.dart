@@ -1,38 +1,38 @@
-/// Lua 脚本数据模型
+/// Lua Scriptdata model
 
-/// 脚本信息
+/// Scriptinformation
 class ScriptModel {
-  /// 脚本 ID
+  /// Script ID
   final String id;
 
-  /// 脚本名称
+  /// Script name
   final String name;
 
-  /// 脚本描述
+  /// ScriptDescription
   final String description;
 
-  /// 脚本内容 (Lua 代码)
+  /// Scriptcontent  (Lua code)
   final String content;
 
-  /// 创建时间
+  /// Documentation.
   final DateTime createdAt;
 
-  /// 最后修改时间
+  /// Documentation.
   final DateTime updatedAt;
 
-  /// 是否为内置脚本
+  /// Documentation.
   final bool isBuiltin;
 
-  /// 是否为 AI 生成
+  /// Documentation.
   final bool isAiGenerated;
 
-  /// 标签
+  /// Documentation.
   final List<String> tags;
 
-  /// 执行次数
+  /// Documentation.
   final int executionCount;
 
-  /// 最后执行时间
+  /// Documentation.
   final DateTime? lastExecutedAt;
 
   ScriptModel({
@@ -112,7 +112,7 @@ class ScriptModel {
     );
   }
 
-  /// 创建 AI 生成的脚本
+  /// Documentation.
   factory ScriptModel.aiGenerated({
     required String name,
     required String content,

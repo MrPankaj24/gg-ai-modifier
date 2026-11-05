@@ -55,22 +55,22 @@ class OverlayService : Service() {
     private var panelParams: WindowManager.LayoutParams? = null
     private val handler = Handler(Looper.getMainLooper())
 
-    // 搜索状态
+    // Searchstatus
     private var searchResults: List<Map<String, Any>> = emptyList()
     private var searchDataType = "dword"
-    private val selectedIndices = mutableSetOf<Int>() // 选中的结果索引
-    // 搜索输入框的值（保持不丢失）
+    private val selectedIndices = mutableSetOf<Int>() // Selected result indices
+    // Implementation detail.
     private var savedSearchInput = ""
     private var savedFilterInput = ""
     private var savedRangeMin = ""
     private var savedRangeMax = ""
     private var savedScrollY = 0
 
-    // AI 对话历史（持久化在内存中，防止切换后消失）
+    // Implementation detail.
     private val chatMessages = mutableListOf<Pair<String, String>>() // (sender, message)
     private var isAiResponding = false
 
-    // 记住上次打开的面板
+    // Implementation detail.
     private var lastPanel = ""
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -81,7 +81,7 @@ class OverlayService : Service() {
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification())
         createBall()
-        // 恢复上次打开的面板
+        // Implementation detail.
         lastPanel = getSharedPreferences("gg_overlay", Context.MODE_PRIVATE).getString("last_panel", "") ?: ""
     }
 
@@ -93,11 +93,11 @@ class OverlayService : Service() {
         super.onDestroy()
     }
 
-    // ==================== 通知 ====================
+    // Implementation detail.
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val ch = NotificationChannel(CHANNEL_ID, "GG-AI 悬浮窗", NotificationManager.IMPORTANCE_LOW)
+            val ch = NotificationChannel(CHANNEL_ID, "GG-AI Overlay", NotificationManager.IMPORTANCE_LOW)
             (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch)
         }
     }
@@ -106,16 +106,16 @@ class OverlayService : Service() {
         val pi = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(this, CHANNEL_ID).setContentTitle("GG-AI").setContentText("悬浮窗运行中")
+            Notification.Builder(this, CHANNEL_ID).setContentTitle("GG-AI").setContentText("Overlay running")
                 .setSmallIcon(android.R.drawable.ic_dialog_info).setContentIntent(pi).build()
         } else {
             @Suppress("DEPRECATION")
-            Notification.Builder(this).setContentTitle("GG-AI").setContentText("悬浮窗运行中")
+            Notification.Builder(this).setContentTitle("GG-AI").setContentText("Overlay running")
                 .setSmallIcon(android.R.drawable.ic_dialog_info).setContentIntent(pi).build()
         }
     }
 
-    // ==================== 悬浮球 ====================
+    // Implementation detail.
 
     private fun createBall() {
         wm = getSystemService(WINDOW_SERVICE) as WindowManager
@@ -125,24 +125,24 @@ class OverlayService : Service() {
             background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(Color.parseColor("#f6f2c1")) }
             setPadding(dp(10), dp(10), dp(10), dp(10))
         }
-        
+
         val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
             @Suppress("DEPRECATION")
             WindowManager.LayoutParams.TYPE_PHONE
         }
-        
+
         ballParams = WindowManager.LayoutParams(
-            dp(50), 
-            dp(50), 
+            dp(50),
+            dp(50),
             type,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or 
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
             WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
             WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
-        ).apply { 
+        ).apply {
             gravity = Gravity.TOP or Gravity.START
             x = 0
             y = dp(200)
@@ -171,7 +171,7 @@ class OverlayService : Service() {
         ballView = null
     }
 
-    // ==================== 面板管理 ====================
+    // Implementation detail.
 
     private fun saveLastPanel(name: String) {
         lastPanel = name
@@ -179,7 +179,7 @@ class OverlayService : Service() {
     }
 
     private fun closePanel() {
-        // 关闭前保存滚动位置（仅当面板有 ScrollView 时才更新，避免菜单面板覆盖搜索面板的滚动位置）
+        // Implementation detail.
         try {
             fun findScrollView(v: android.view.View): android.widget.ScrollView? {
                 if (v is android.widget.ScrollView) return v
@@ -204,14 +204,14 @@ class OverlayService : Service() {
         val screenH = dm.heightPixels
         val panelW = dp(w).coerceAtMost(screenW - dp(20))
         val panelH = dp(h).coerceAtMost(screenH - dp(20))
-        
+
         val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
             @Suppress("DEPRECATION")
             WindowManager.LayoutParams.TYPE_PHONE
         }
-        
+
         panelParams = WindowManager.LayoutParams(
             panelW,
             panelH,
@@ -228,8 +228,8 @@ class OverlayService : Service() {
         panel = view
         try { wm?.addView(panel, panelParams) } catch (_: Exception) {}
     }
-    
-    // 创建可获得焦点的面板（用于输入法）
+
+    // Implementation detail.
     private fun showFocusablePanel(view: View, w: Int = 280, h: Int = 400) {
         closePanel()
         val dm = resources.displayMetrics
@@ -237,14 +237,14 @@ class OverlayService : Service() {
         val screenH = dm.heightPixels
         val panelW = dp(w).coerceAtMost(screenW - dp(20))
         val panelH = dp(h).coerceAtMost(screenH - dp(20))
-        
+
         val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
             @Suppress("DEPRECATION")
             WindowManager.LayoutParams.TYPE_PHONE
         }
-        
+
         panelParams = WindowManager.LayoutParams(
             panelW,
             panelH,
@@ -270,7 +270,7 @@ class OverlayService : Service() {
         else @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE
     }
 
-    // ==================== 可拖动面板包装 ====================
+    // Implementation detail.
 
     private fun makeDraggablePanel(title: String, contentBuilder: (LinearLayout) -> Unit, w: Int = 280, h: Int = 400, onBack: (() -> Unit)? = null, titleIcon: Int? = null, bgColor: String = "#F2F3F8") {
         val root = LinearLayout(this).apply {
@@ -280,7 +280,7 @@ class OverlayService : Service() {
             }
         }
 
-        // 可拖动标题栏
+        // Implementation detail.
         val titleBar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             minimumHeight = 0
@@ -300,10 +300,10 @@ class OverlayService : Service() {
         }
         titleBar.addView(titleText)
 
-        // 返回按钮（如果不是主菜单）
+        // Implementation detail.
         if (title != "🎮 GG-AI Modifier") {
             titleBar.addView(TextView(this).apply {
-                text = "返回"; setTextColor(Color.parseColor("#FFFFFF")); textSize = 12f
+                text = "back "; setTextColor(Color.parseColor("#FFFFFF")); textSize = 12f
                 background = GradientDrawable().apply { cornerRadius = dp(4).toFloat(); setColor(Color.parseColor("#3D5AFE")) }
                 setPadding(dp(5), dp(5), dp(5), dp(5))
                 setOnClickListener { onBack?.invoke() ?: showMainMenu() }
@@ -312,13 +312,13 @@ class OverlayService : Service() {
 
         root.addView(titleBar)
 
-        // 分割线
+        // Implementation detail.
         root.addView(View(this).apply {
             setBackgroundColor(Color.parseColor("#E8EAF6"))
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(1))
         })
 
-        // 内容区域
+        // Implementation detail.
         val contentArea = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f)
@@ -326,10 +326,10 @@ class OverlayService : Service() {
         contentBuilder(contentArea)
         root.addView(contentArea)
 
-        // 标题栏拖动支持 - 修复横屏模式下的拖动问题
+        // Implementation detail.
         var pix = 0; var piy = 0; var ptx = 0f; var pty = 0f; var isDragging = false
         val dm = resources.displayMetrics
-        
+
         titleBar.setOnTouchListener { _, e ->
             when (e.action) {
                 MotionEvent.ACTION_DOWN -> {
@@ -344,20 +344,20 @@ class OverlayService : Service() {
                     isDragging = true
                     val dx = (e.rawX - ptx).toInt()
                     val dy = (e.rawY - pty).toInt()
-                    
-                    // 计算新位置，确保不超出屏幕边界
+
+                    // Implementation detail.
                     val screenW = dm.widthPixels
                     val screenH = dm.heightPixels
                     val panelW = panelParams?.width ?: 0
                     val panelH = panelParams?.height ?: 0
-                    
+
                     var newX = pix + dx
                     var newY = piy + dy
-                    
-                    // 限制在屏幕范围内
+
+                    // Implementation detail.
                     newX = newX.coerceIn(-panelW / 2, screenW - panelW / 2)
                     newY = newY.coerceIn(0, screenH - panelH)
-                    
+
                     panelParams?.x = newX
                     panelParams?.y = newY
                     try { wm?.updateViewLayout(panel, panelParams) } catch (_: Exception) {}
@@ -370,15 +370,15 @@ class OverlayService : Service() {
             }
         }
 
-        // 根据面板类型选择显示方式
-        if (title == "🤖 AI 对话") {
+        // Implementation detail.
+        if (title == "🤖 AI Chat") {
             showFocusablePanel(root, w, h)
         } else {
             showPanel(root, w, h)
         }
     }
 
-    // ==================== 主菜单 ====================
+    // Implementation detail.
 
     private fun showLastOrMainMenu() {
         when (lastPanel) {
@@ -398,34 +398,34 @@ class OverlayService : Service() {
             }
             val list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(12), dp(8), dp(12), dp(8)) }
 
-            list.addView(menuBtn("附加进程", R.drawable.jingcheng) { showProcessPanel() })
-            list.addView(menuBtn("内存搜索", R.drawable.neichun) { showSearchPanel() })
-            list.addView(menuBtn("AI 对话", R.drawable.ai) { showAIChatPanel() })
-            list.addView(menuBtn("脚本库", R.drawable.jiaoben) { showScriptPanel() })
+            list.addView(menuBtn("Attach Process", R.drawable.jingcheng) { showProcessPanel() })
+            list.addView(menuBtn("Memory search", R.drawable.neichun) { showSearchPanel() })
+            list.addView(menuBtn("AI Chat", R.drawable.ai) { showAIChatPanel() })
+            list.addView(menuBtn("Script Library", R.drawable.jiaoben) { showScriptPanel() })
 
             sv.addView(list); content.addView(sv)
 
-            // 底部按钮
+            // Implementation detail.
             val bar = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(dp(12), dp(8), dp(12), dp(8)) }
-            bar.addView(iconBtn(R.drawable.gb_xfc, "悬浮窗") { stopSelf() }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-            bar.addView(iconBtn(R.drawable.ck_gb, "菜单") { closePanel() }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            bar.addView(iconBtn(R.drawable.gb_xfc, "Overlay") { stopSelf() }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            bar.addView(iconBtn(R.drawable.ck_gb, "Menu") { closePanel() }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
             content.addView(bar)
         }, 250, 380, titleIcon = R.drawable.xfc, bgColor = "#536DFE")
     }
 
-    // ==================== 进程面板 ====================
+    // Implementation detail.
 
     private fun showProcessPanel() {
         saveLastPanel("process")
-        makeDraggablePanel("选择游戏进程", { content ->
-            val status = TextView(this).apply { text = "正在扫描..."; setTextColor(Color.parseColor("#F2F3F8")); textSize = 12f; setPadding(dp(12), dp(8), dp(12), dp(4)) }
+        makeDraggablePanel("Select game process", { content ->
+            val status = TextView(this).apply { text = "Scanning..."; setTextColor(Color.parseColor("#F2F3F8")); textSize = 12f; setPadding(dp(12), dp(8), dp(12), dp(4)) }
             content.addView(status)
 
             val sv = ScrollView(this).apply { layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f) }
             val list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(8), dp(4), dp(8), dp(4)) }
             sv.addView(list); content.addView(sv)
 
-            // 底部按钮
+            // Implementation detail.
             val bar = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(dp(12), dp(4), dp(12), dp(8)) }
             bar.addView(iconBtn(R.drawable.shuaxing) { loadProcs(list, status) }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
             bar.addView(iconBtn(R.drawable.ck_gb) { closePanel() }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
@@ -436,7 +436,7 @@ class OverlayService : Service() {
     }
 
     private fun loadProcs(list: LinearLayout, status: TextView) {
-        status.text = "正在扫描..."; list.removeAllViews()
+        status.text = "Scanning..."; list.removeAllViews()
         Thread {
             val procs = ProcessManager.getProcessList(this@OverlayService).filter {
                 val p = it["packageName"] as String
@@ -444,7 +444,7 @@ class OverlayService : Service() {
                         p != "system" && p != "zygote" && p != "zygote64"
             }
             handler.post {
-                status.text = "找到 ${procs.size} 个应用"
+                status.text = "Found ${procs.size} apps"
                 for (proc in procs) {
                     val name = proc["processName"] as String; val pkg = proc["packageName"] as String; val pid = proc["pid"] as Int
                     val item = LinearLayout(this).apply {
@@ -458,8 +458,8 @@ class OverlayService : Service() {
                         Thread {
                             val ok = MemoryEngine.attachProcess(pid)
                             handler.post {
-                                status.text = if (ok) "✅ 已附加: $name" else "❌ 附加失败"
-                                // 附加成功后，通知主应用更新状态，并重置搜索结果
+                                status.text = if (ok) "✅ Attached: $name" else "❌ Attach failed"
+                                // Implementation detail.
                                 if (ok) {
                                     saveAttachedProcess(pid, pkg, name)
                                     searchResults = emptyList()
@@ -472,8 +472,8 @@ class OverlayService : Service() {
             }
         }.start()
     }
-    
-    // 保存附加的进程信息，供主应用读取
+
+    // Implementation detail.
     private fun saveAttachedProcess(pid: Int, packageName: String, processName: String) {
         try {
             val prefs = getSharedPreferences("gg_overlay", Context.MODE_PRIVATE)
@@ -489,7 +489,7 @@ class OverlayService : Service() {
         }
     }
 
-    // ==================== 搜索面板 ====================
+    // Implementation detail.
 
     private var currentSearchMode = "exact"
 
@@ -501,36 +501,36 @@ class OverlayService : Service() {
         val density = dm.density
         val isLandscape = screenW > screenH
 
-        // 横屏：宽度88%屏幕，高度93%屏幕；竖屏：保持原样
+        // Implementation detail.
         val panelWDp = if (isLandscape) ((screenW * 0.88f) / density).toInt().coerceIn(650, 900) else 320
         val panelHDp = if (isLandscape) ((screenH * 0.93f) / density).toInt().coerceIn(380, 550) else 520
 
-        makeDraggablePanel("内存搜索", { content ->
+        makeDraggablePanel("Memory search", { content ->
             val pid = MemoryEngine.getAttachedPid()
 
             if (isLandscape) {
-                // ========== 横屏模式：左右两栏布局 ==========
+                // Implementation detail.
                 val mainRow = LinearLayout(this).apply {
                     orientation = LinearLayout.HORIZONTAL
                     layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f)
                 }
 
-                // ---- 左栏：搜索控件 ----
+                // Implementation detail.
                 val leftPanel = LinearLayout(this).apply {
                     orientation = LinearLayout.VERTICAL
                     layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
                     setPadding(dp(8), dp(4), dp(4), dp(4))
                 }
 
-                // 状态行
+                // Implementation detail.
                 val status = TextView(this).apply {
-                    text = if (pid != null) "PID:$pid" else "⚠未附加"
+                    text = if (pid != null) "PID:$pid" else "⚠Not attached"
                     setTextColor(if (pid != null) Color.parseColor("#66BB6A") else Color.parseColor("#FF8F00"))
                     textSize = 11f
                 }
                 leftPanel.addView(status)
 
-                // 类型选择
+                // type Select
                 val types = arrayOf("dword", "float", "double", "byte", "word", "qword")
                 val typeSpinner = Spinner(this).apply {
                     adapter = ArrayAdapter(this@OverlayService, android.R.layout.simple_spinner_dropdown_item, types)
@@ -538,7 +538,7 @@ class OverlayService : Service() {
                 }
                 leftPanel.addView(typeSpinner)
 
-                // 模式切换按钮
+                // Implementation detail.
                 val modeRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, dp(4), 0, dp(4)) }
                 fun modeBtn(label: String, mode: String): Button {
                     return Button(this).apply {
@@ -552,35 +552,35 @@ class OverlayService : Service() {
                         setOnClickListener { currentSearchMode = mode; showSearchPanel() }
                     }
                 }
-                modeRow.addView(modeBtn("精确", "exact"))
-                modeRow.addView(modeBtn("模糊", "fuzzy"))
-                modeRow.addView(modeBtn("范围", "range"))
-                modeRow.addView(modeBtn("地址", "addr"))
-                modeRow.addView(modeBtn("机器码", "machine"))
+                modeRow.addView(modeBtn("Exact", "exact"))
+                modeRow.addView(modeBtn("Fuzzy", "fuzzy"))
+                modeRow.addView(modeBtn("Range", "range"))
+                modeRow.addView(modeBtn("address ", "addr"))
+                modeRow.addView(modeBtn("Machine code", "machine"))
                 leftPanel.addView(modeRow)
 
-                // 分割线
+                // Implementation detail.
                 leftPanel.addView(View(this).apply {
                     setBackgroundColor(Color.parseColor("#E8EAF6"))
                     layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(1)).apply { topMargin = dp(4); bottomMargin = dp(4) }
                 })
 
-                // 输入区域（根据模式）
+                // Implementation detail.
                 buildSearchInputArea(leftPanel, status, typeSpinner, null, dp(4))
 
-                // 弹性空间
+                // Implementation detail.
                 leftPanel.addView(View(this).apply {
                     layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f)
                 })
 
-                // 底部按钮
+                // Implementation detail.
                 val bar = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, dp(4), 0, 0) }
                 bar.addView(iconBtn(R.drawable.shuaxing) {
-                    searchResults = emptyList(); selectedIndices.clear(); status.text = "已重置"
+                    searchResults = emptyList(); selectedIndices.clear(); status.text = "Reset"
                     val resultList = leftPanel.tag as? LinearLayout
                     resultList?.removeAllViews()
                     resultList?.addView(TextView(this@OverlayService).apply {
-                        text = "暂无结果"; setTextColor(Color.parseColor("#3D5AFE")); textSize = 12f
+                        text = "No results"; setTextColor(Color.parseColor("#3D5AFE")); textSize = 12f
                         setPadding(dp(8), dp(20), dp(8), dp(8)); gravity = Gravity.CENTER
                     })
                 }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
@@ -589,13 +589,13 @@ class OverlayService : Service() {
 
                 mainRow.addView(leftPanel)
 
-                // 分割线（竖向）
+                // Implementation detail.
                 mainRow.addView(View(this).apply {
                     setBackgroundColor(Color.parseColor("#E8EAF6"))
                     layoutParams = LinearLayout.LayoutParams(dp(1), LinearLayout.LayoutParams.MATCH_PARENT)
                 })
 
-                // ---- 右栏：搜索结果 ----
+                // Implementation detail.
                 val rightPanel = LinearLayout(this).apply {
                     orientation = LinearLayout.VERTICAL
                     layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
@@ -603,12 +603,12 @@ class OverlayService : Service() {
                 }
 
                 val resultTitle = TextView(this).apply {
-                    text = "搜索结果"; setTextColor(Color.parseColor("#4A6572")); textSize = 11f
+                    text = "Search results"; setTextColor(Color.parseColor("#4A6572")); textSize = 11f
                     setPadding(0, 0, 0, dp(4))
                 }
                 rightPanel.addView(resultTitle)
 
-                // 固定操作栏容器
+                // Implementation detail.
                 val actionBarContainer = LinearLayout(this).apply {
                     orientation = LinearLayout.VERTICAL
                     layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
@@ -622,17 +622,17 @@ class OverlayService : Service() {
                 rsv.addView(rl)
 
                 if (searchResults.isNotEmpty()) {
-                    status.text = "${searchResults.size}个结果"
+                    status.text = "${searchResults.size} results"
                     updateSearchResults(rl, searchResults, actionBarContainer)
                 } else {
                     rl.addView(TextView(this).apply {
-                        text = "暂无结果"; setTextColor(Color.parseColor("#3D5AFE")); textSize = 12f
+                        text = "No results"; setTextColor(Color.parseColor("#3D5AFE")); textSize = 12f
                         setPadding(dp(8), dp(20), dp(8), dp(8)); gravity = Gravity.CENTER
                     })
                 }
 
                 rightPanel.addView(rsv)
-                // 恢复滚动位置
+                // Implementation detail.
                 if (savedScrollY > 0) {
                     rsv.post { rsv.scrollY = savedScrollY; savedScrollY = 0 }
                 }
@@ -640,17 +640,17 @@ class OverlayService : Service() {
 
                 content.addView(mainRow)
 
-                // 保存 rl 引用供回调使用（横屏模式下需要设置到 leftPanel.tag）
+                // Implementation detail.
                 content.tag = rl
                 leftPanel.tag = rl
             } else {
-                // ========== 竖屏模式：原有上下布局 ==========
+                // Implementation detail.
                 val topRow = LinearLayout(this).apply {
                     orientation = LinearLayout.HORIZONTAL
                     setPadding(dp(8), dp(4), dp(8), dp(2))
                 }
                 val status = TextView(this).apply {
-                    text = if (pid != null) "PID:$pid" else "⚠未附加"
+                    text = if (pid != null) "PID:$pid" else "⚠Not attached"
                     setTextColor(if (pid != null) Color.parseColor("#66BB6A") else Color.parseColor("#FF8F00"))
                     textSize = 11f
                     layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
@@ -678,42 +678,42 @@ class OverlayService : Service() {
                         setOnClickListener { currentSearchMode = mode; showSearchPanel() }
                     }
                 }
-                modeRow.addView(modeBtn("精确", "exact"))
-                modeRow.addView(modeBtn("模糊", "fuzzy"))
-                modeRow.addView(modeBtn("范围", "range"))
-                modeRow.addView(modeBtn("地址", "addr"))
-                modeRow.addView(modeBtn("机器码", "machine"))
+                modeRow.addView(modeBtn("Exact", "exact"))
+                modeRow.addView(modeBtn("Fuzzy", "fuzzy"))
+                modeRow.addView(modeBtn("Range", "range"))
+                modeRow.addView(modeBtn("address ", "addr"))
+                modeRow.addView(modeBtn("Machine code", "machine"))
                 content.addView(modeRow)
 
-                // 输入区域（在结果列表上面）
+                // Implementation detail.
                 buildSearchInputArea(content, status, typeSpinner, null, dp(12))
 
-                // 固定操作栏容器
+                // Implementation detail.
                 val actionBarContainer = LinearLayout(this).apply {
                     orientation = LinearLayout.VERTICAL
                     layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
                 }
                 content.addView(actionBarContainer)
 
-                // 结果列表
+                // Implementation detail.
                 val rsv = ScrollView(this).apply { layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f) }
                 val rl = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(6), dp(2), dp(6), dp(2)) }
                 rsv.addView(rl)
-                // 保存 rl 引用供回调使用
+                // Implementation detail.
                 content.tag = rl
                 if (searchResults.isNotEmpty()) {
-                    status.text = "${searchResults.size}个结果"
+                    status.text = "${searchResults.size} results"
                     updateSearchResults(rl, searchResults, actionBarContainer)
                 }
                 content.addView(rsv)
-                // 恢复滚动位置
+                // Implementation detail.
                 if (savedScrollY > 0) {
                     rsv.post { rsv.scrollY = savedScrollY; savedScrollY = 0 }
                 }
 
                 val bar = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(dp(8), dp(2), dp(8), dp(4)) }
                 bar.addView(iconBtn(R.drawable.shuaxing) {
-                    searchResults = emptyList(); selectedIndices.clear(); status.text = "已重置"
+                    searchResults = emptyList(); selectedIndices.clear(); status.text = "Reset"
                     rl.removeAllViews()
                 }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
                 bar.addView(iconBtn(R.drawable.ck_gb) { closePanel() }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
@@ -722,16 +722,16 @@ class OverlayService : Service() {
         }, panelWDp, panelHDp, titleIcon = R.drawable.neichun, bgColor = "#213333")
     }
 
-    // 构建搜索输入区域（横屏/竖屏复用）
+    // Implementation detail.
     private fun buildSearchInputArea(parent: LinearLayout, status: TextView, typeSpinner: Spinner, rl: LinearLayout?, inputPadding: Int) {
-        // 获取结果列表容器：优先使用传入的 rl，否则从 parent.tag 获取
+        // Implementation detail.
         fun getResultList(): LinearLayout? = rl ?: (parent.tag as? LinearLayout)
 
         when (currentSearchMode) {
             "exact" -> {
                 val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(inputPadding, dp(2), inputPadding, dp(2)) }
                 val inp = EditText(this).apply {
-                    hint = "输入数值"; setTextColor(Color.parseColor("#FFFFFF")); setHintTextColor(Color.parseColor("#FFFFFF"))
+                    hint = "Enter a value"; setTextColor(Color.parseColor("#FFFFFF")); setHintTextColor(Color.parseColor("#FFFFFF"))
                     background = GradientDrawable().apply { cornerRadius = dp(6).toFloat(); setColor(Color.parseColor("#304FFE")) }
                     setPadding(dp(8), dp(6), dp(8), dp(6)); textSize = 13f
                     inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL or android.text.InputType.TYPE_NUMBER_FLAG_SIGNED
@@ -741,11 +741,11 @@ class OverlayService : Service() {
                 row.addView(inp)
                 row.addView(iconBtn(R.drawable.bt_shuousuo) {
                     val v = inp.text.toString()
-                    if (v.isEmpty()) { status.text = "❌请输入数值"; return@iconBtn }
+                    if (v.isEmpty()) { status.text = "❌Enter a value"; return@iconBtn }
                     savedSearchInput = v
-                    if (MemoryEngine.getAttachedPid() == null) { status.text = "❌请先附加"; return@iconBtn }
+                    if (MemoryEngine.getAttachedPid() == null) { status.text = "❌Attach first"; return@iconBtn }
                     val dtype = typeSpinner.selectedItem.toString(); searchDataType = dtype
-                    status.text = "搜索中..."
+                    status.text = "Searching..."
                     val resultList = getResultList()
                     resultList?.removeAllViews(); searchResults = emptyList()
                     Thread {
@@ -760,7 +760,7 @@ class OverlayService : Service() {
 
                 val fRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(inputPadding, dp(2), inputPadding, dp(2)) }
                 val fInp = EditText(this).apply {
-                    hint = "新值(过滤)"; setTextColor(Color.parseColor("#FFFFFF")); setHintTextColor(Color.parseColor("#FFFFFF"))
+                    hint = "New value (filter)"; setTextColor(Color.parseColor("#FFFFFF")); setHintTextColor(Color.parseColor("#FFFFFF"))
                     background = GradientDrawable().apply { cornerRadius = dp(6).toFloat(); setColor(Color.parseColor("#304FFE")) }
                     setPadding(dp(8), dp(6), dp(8), dp(6)); textSize = 13f
                     inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL or android.text.InputType.TYPE_NUMBER_FLAG_SIGNED
@@ -770,9 +770,9 @@ class OverlayService : Service() {
                 fRow.addView(fInp)
                 fRow.addView(iconBtn(R.drawable.bt_guolv) {
                     val v = fInp.text.toString()
-                    if (v.isEmpty() || searchResults.isEmpty()) { status.text = "❌请先搜索"; return@iconBtn }
+                    if (v.isEmpty() || searchResults.isEmpty()) { status.text = "❌Search first"; return@iconBtn }
                     savedFilterInput = v
-                    status.text = "过滤中..."
+                    status.text = "Filtering..."
                     val resultList = getResultList()
                     Thread {
                         val t = System.currentTimeMillis()
@@ -793,9 +793,9 @@ class OverlayService : Service() {
                         setPadding(dp(8), dp(4), dp(8), dp(4))
                         layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = dp(3); bottomMargin = dp(2) }
                         setOnClickListener {
-                            if (MemoryEngine.getAttachedPid() == null) { status.text = "❌请先附加"; return@setOnClickListener }
+                            if (MemoryEngine.getAttachedPid() == null) { status.text = "❌Attach first"; return@setOnClickListener }
                             val dtype = typeSpinner.selectedItem.toString(); searchDataType = dtype
-                            status.text = "模糊搜索..."
+                            status.text = "FuzzySearch..."
                             Thread {
                                 try {
                                     val t = System.currentTimeMillis()
@@ -808,10 +808,10 @@ class OverlayService : Service() {
                     }
                 }
                 val r1 = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-                r1.addView(fuzzyBtn("变大", "increased", "#E53935"))
-                r1.addView(fuzzyBtn("变小", "decreased", "#43A047"))
-                r1.addView(fuzzyBtn("没变", "unchanged", "#1E88E5"))
-                r1.addView(fuzzyBtn("改变", "changed", "#FB8C00"))
+                r1.addView(fuzzyBtn("Increased", "increased", "#E53935"))
+                r1.addView(fuzzyBtn("Decreased", "decreased", "#43A047"))
+                r1.addView(fuzzyBtn("Unchanged", "unchanged", "#1E88E5"))
+                r1.addView(fuzzyBtn("Changed", "changed", "#FB8C00"))
                 grid.addView(r1)
                 parent.addView(grid)
             }
@@ -836,15 +836,15 @@ class OverlayService : Service() {
                 row.addView(minInp)
                 row.addView(TextView(this).apply { text = "~"; setTextColor(Color.parseColor("#F2F3F8")); setPadding(dp(4), dp(6), dp(4), dp(6)) })
                 row.addView(maxInp)
-                row.addView(smallBtn("扫描") {
+                row.addView(smallBtn("Scan") {
                     val lo = minInp.text.toString().toLongOrNull()
                     val hi = maxInp.text.toString().toLongOrNull()
-                    if (lo == null || hi == null) { status.text = "❌输入范围"; return@smallBtn }
+                    if (lo == null || hi == null) { status.text = "❌Enter a range"; return@smallBtn }
                     savedRangeMin = minInp.text.toString()
                     savedRangeMax = maxInp.text.toString()
-                    if (MemoryEngine.getAttachedPid() == null) { status.text = "❌请先附加"; return@smallBtn }
+                    if (MemoryEngine.getAttachedPid() == null) { status.text = "❌Attach first"; return@smallBtn }
                     val dtype = typeSpinner.selectedItem.toString(); searchDataType = dtype
-                    status.text = "范围扫描..."
+                    status.text = "Scanning range..."
                     val resultList = getResultList()
                     resultList?.removeAllViews(); searchResults = emptyList()
                     Thread {
@@ -867,13 +867,13 @@ class OverlayService : Service() {
                     setText(savedSearchInput)
                 }
                 row.addView(inp)
-                row.addView(smallBtn("读取") {
+                row.addView(smallBtn("read ") {
                     val addr = inp.text.toString().trim()
-                    if (addr.isEmpty()) { status.text = "❌输入地址"; return@smallBtn }
+                    if (addr.isEmpty()) { status.text = "❌Enter an address"; return@smallBtn }
                     savedSearchInput = addr
-                    if (MemoryEngine.getAttachedPid() == null) { status.text = "❌请先附加"; return@smallBtn }
+                    if (MemoryEngine.getAttachedPid() == null) { status.text = "❌Attach first"; return@smallBtn }
                     searchDataType = "addr"
-                    status.text = "读取中..."
+                    status.text = "Reading..."
                     val resultList = getResultList()
                     resultList?.removeAllViews(); searchResults = emptyList()
                     Thread {
@@ -898,11 +898,11 @@ class OverlayService : Service() {
                 row.addView(inp)
                 row.addView(iconBtn(R.drawable.bt_shuousuo) {
                     val pattern = inp.text.toString().trim()
-                    if (pattern.isEmpty()) { status.text = "❌输入机器码"; return@iconBtn }
+                    if (pattern.isEmpty()) { status.text = "❌enter Machine code"; return@iconBtn }
                     savedSearchInput = pattern
-                    if (MemoryEngine.getAttachedPid() == null) { status.text = "❌请先附加"; return@iconBtn }
+                    if (MemoryEngine.getAttachedPid() == null) { status.text = "❌Attach first"; return@iconBtn }
                     searchDataType = "aob"
-                    status.text = "扫描中..."
+                    status.text = "Scanning..."
                     val resultList = getResultList()
                     resultList?.removeAllViews(); searchResults = emptyList()
                     Thread {
@@ -916,25 +916,25 @@ class OverlayService : Service() {
             }
         }
     }
-    
-    // 搜索完成通知：尝试更新当前面板UI，若面板已关闭则等重新打开时自动显示结果
+
+    // Implementation detail.
     private fun notifySearchComplete(count: Int, startTime: Long) {
         val elapsed = String.format("%.2f", (System.currentTimeMillis() - startTime) / 1000.0)
         try {
             handler.post {
                 try {
-                    // 尝试更新当前面板的UI
+                    // Implementation detail.
                     refreshCurrentPanel()
-                    Toast.makeText(this, "${count}个结果 ${elapsed}s", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "${count} results ${elapsed}s", Toast.LENGTH_SHORT).show()
                 } catch (_: Exception) {}
             }
         } catch (_: Exception) {}
     }
 
-    // 刷新当前搜索面板的结果显示
+    // Implementation detail.
     private fun refreshCurrentPanel() {
         val content = panel as? android.view.ViewGroup ?: return
-        // 找到 ScrollView 中的 rl（结果列表容器）
+        // Implementation detail.
         fun findResultList(v: android.view.ViewGroup): LinearLayout? {
             for (i in 0 until v.childCount) {
                 val child = v.getChildAt(i)
@@ -949,13 +949,13 @@ class OverlayService : Service() {
             }
             return null
         }
-        // 找到操作栏容器
+        // Implementation detail.
         fun findActionBarContainer(v: android.view.ViewGroup): LinearLayout? {
             for (i in 0 until v.childCount) {
                 val child = v.getChildAt(i)
                 if (child is LinearLayout && child.childCount > 0) {
                     val firstChild = child.getChildAt(0)
-                    if (firstChild is Button && (firstChild.text?.toString()?.contains("全") == true)) {
+                    if (firstChild is Button && (firstChild.text?.toString()?.contains("All") == true)) {
                         return child
                     }
                 }
@@ -982,11 +982,11 @@ class OverlayService : Service() {
             if (actionBarContainer != null) {
                 actionBarContainer.visibility = android.view.View.GONE
             }
-            rl.addView(TextView(this).apply { text = "未找到结果"; setTextColor(Color.parseColor("#4A6572")); textSize = 11f; setPadding(dp(8), dp(4), dp(8), dp(4)) })
+            rl.addView(TextView(this).apply { text = "No results found"; setTextColor(Color.parseColor("#4A6572")); textSize = 11f; setPadding(dp(8), dp(4), dp(8), dp(4)) })
             return
         }
 
-        // 批量操作按钮栏
+        // Implementation detail.
         val actionBar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             setPadding(dp(2), dp(2), dp(2), dp(4))
@@ -994,10 +994,10 @@ class OverlayService : Service() {
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(4) }
         }
 
-        // 实际显示的结果数量（最多100）
+        // Implementation detail.
         val displayCount = minOf(results.size, 300)
 
-        // 创建均匀分布的按钮
+        // Implementation detail.
         fun actionBtn(text: String, onClick: () -> Unit): Button {
             return Button(this).apply {
                 this.text = text; setTextColor(Color.parseColor("#F2F3F8")); textSize = 11f
@@ -1008,8 +1008,8 @@ class OverlayService : Service() {
             }
         }
 
-        // 全选/取消全选
-        actionBar.addView(actionBtn("☑全") {
+        // Select all/Deselect all
+        actionBar.addView(actionBtn("☑All") {
             if (selectedIndices.size >= displayCount) {
                 selectedIndices.clear()
             } else {
@@ -1021,41 +1021,41 @@ class OverlayService : Service() {
             updateSearchResults(rl, results, actionBarContainer)
         })
 
-        // 复制地址
-        actionBar.addView(actionBtn("📋址") {
-            if (selectedIndices.isEmpty()) { Toast.makeText(this, "请先勾选", Toast.LENGTH_SHORT).show(); return@actionBtn }
+        // Implementation detail.
+        actionBar.addView(actionBtn("📋Addresses") {
+            if (selectedIndices.isEmpty()) { Toast.makeText(this, "Select items first", Toast.LENGTH_SHORT).show(); return@actionBtn }
             val addrs = selectedIndices.map { results[it]["address"] as String }.joinToString("\n")
             copyToClipboard(addrs)
-            Toast.makeText(this, "已复制${selectedIndices.size}个地址", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Copied ${selectedIndices.size} addresses", Toast.LENGTH_SHORT).show()
         })
 
-        // 复制机器码
-        actionBar.addView(actionBtn("📋码") {
-            if (selectedIndices.isEmpty()) { Toast.makeText(this, "请先勾选", Toast.LENGTH_SHORT).show(); return@actionBtn }
+        // Implementation detail.
+        actionBar.addView(actionBtn("📋Codes") {
+            if (selectedIndices.isEmpty()) { Toast.makeText(this, "Select items first", Toast.LENGTH_SHORT).show(); return@actionBtn }
             val codes = selectedIndices.map { results[it]["machineCode"] as? String ?: "" }.joinToString("\n")
             copyToClipboard(codes)
-            Toast.makeText(this, "已复制${selectedIndices.size}条机器码", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Copied ${selectedIndices.size} machine-code entries", Toast.LENGTH_SHORT).show()
         })
 
-        // 复制值
-        actionBar.addView(actionBtn("📋值") {
-            if (selectedIndices.isEmpty()) { Toast.makeText(this, "请先勾选", Toast.LENGTH_SHORT).show(); return@actionBtn }
+        // Implementation detail.
+        actionBar.addView(actionBtn("📋value ") {
+            if (selectedIndices.isEmpty()) { Toast.makeText(this, "Select items first", Toast.LENGTH_SHORT).show(); return@actionBtn }
             val vals = selectedIndices.map { "${results[it]["value"]}" }.joinToString("\n")
             copyToClipboard(vals)
-            Toast.makeText(this, "已复制${selectedIndices.size}个值", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Copied ${selectedIndices.size} values", Toast.LENGTH_SHORT).show()
         })
 
-        // 添加到AI对话
+        // Implementation detail.
         actionBar.addView(actionBtn("🤖") {
-            if (selectedIndices.isEmpty()) { Toast.makeText(this, "请先勾选", Toast.LENGTH_SHORT).show(); return@actionBtn }
+            if (selectedIndices.isEmpty()) { Toast.makeText(this, "Select items first", Toast.LENGTH_SHORT).show(); return@actionBtn }
             val selectedResults = selectedIndices.map { results[it] }
             addResultsToAIChat(selectedResults)
-            Toast.makeText(this, "已添加${selectedIndices.size}条到AI", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Added ${selectedIndices.size} items to AI", Toast.LENGTH_SHORT).show()
         })
 
-        // 编辑选中项（支持单条和多条）
+        // Implementation detail.
         actionBar.addView(actionBtn("✏️") {
-            if (selectedIndices.isEmpty()) { Toast.makeText(this, "请先勾选", Toast.LENGTH_SHORT).show(); return@actionBtn }
+            if (selectedIndices.isEmpty()) { Toast.makeText(this, "Select items first", Toast.LENGTH_SHORT).show(); return@actionBtn }
             val selectedResults = selectedIndices.map { results[it] }
             showBatchEditDialog(selectedResults)
         })
@@ -1067,7 +1067,7 @@ class OverlayService : Service() {
             rl.addView(actionBar)
         }
 
-        // 结果列表（最多显示100条）
+        // Implementation detail.
         for (index in 0 until displayCount) {
             val r = results[index]
             val addr = r["address"] as String
@@ -1080,7 +1080,7 @@ class OverlayService : Service() {
                 layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(2) }
             }
 
-            // 复选框
+            // Implementation detail.
             val checkBox = android.widget.CheckBox(this).apply {
                 isChecked = selectedIndices.contains(index)
                 buttonTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#3D5AFE"))
@@ -1091,20 +1091,20 @@ class OverlayService : Service() {
             }
             row.addView(checkBox)
 
-            // 机器码+值（或地址+值作为fallback）
+            // Implementation detail.
             row.addView(TextView(this).apply {
                 text = displayText; setTextColor(Color.parseColor("#3D5AFE")); textSize = 10f
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             })
 
-            // 单个操作按钮
-            row.addView(miniBtn("改") {
-                // 保存滚动位置
+            // Implementation detail.
+            row.addView(miniBtn("Edit") {
+                // Implementation detail.
                 val sv = rl.parent as? android.widget.ScrollView
                 savedScrollY = sv?.scrollY ?: 0
                 showWriteDialog(addr, v, mc)
             })
-            row.addView(miniBtn("冻") {
+            row.addView(miniBtn("Freeze") {
                 val ai = addr.removePrefix("0x").removePrefix("0X").toLongOrNull(16)?.toInt() ?: return@miniBtn
                 Thread { if (v != null) MemoryFreezer.freeze(ai, v, searchDataType) }.start()
             })
@@ -1113,41 +1113,41 @@ class OverlayService : Service() {
         }
     }
 
-    // 复制到剪贴板
+    // Copy to clipboard
     private fun copyToClipboard(text: String) {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
         val clip = android.content.ClipData.newPlainText("search_results", text)
         clipboard.setPrimaryClip(clip)
     }
 
-    // 将选中的搜索结果添加到AI对话
+    // Implementation detail.
     private fun addResultsToAIChat(selectedResults: List<Map<String, Any>>) {
         val message = buildString {
-            appendLine("📊 搜索结果分析请求：")
+            appendLine("📊 Search results analysis request:")
             appendLine()
-            appendLine("数据类型: $searchDataType")
-            appendLine("选中 ${selectedResults.size} 条结果：")
+            appendLine("Data type: $searchDataType")
+            appendLine("Selected ${selectedResults.size} results:")
             appendLine()
             for ((i, r) in selectedResults.withIndex()) {
                 val addr = r["address"] as String
                 val v = r["value"]
                 val mc = r["machineCode"] as? String ?: ""
                 if (mc.isNotEmpty()) {
-                    appendLine("${i+1}. 地址: $addr, 机器码: $mc, 值: $v")
+                    appendLine("${i+1}. Address: $addr, Machine code: $mc, value : $v")
                 } else {
-                    appendLine("${i+1}. 地址: $addr, 值: $v")
+                    appendLine("${i+1}. Address: $addr, value : $v")
                 }
             }
             appendLine()
-            appendLine("请帮我分析这些内存地址的含义，以及可能的修改方案。")
+            appendLine("Analyze these memory addresses and suggest possible edit approaches.")
         }
 
-        // 添加到聊天记录
-        chatMessages.add(Pair("👤 我", message))
+        // Implementation detail.
+        chatMessages.add(Pair("👤 Me", message))
 
-        // 如果AI对话面板是打开的，直接刷新显示
-        // 否则在下次打开时会自动显示
-        Toast.makeText(this, "已添加到AI对话，请打开AI对话面板查看", Toast.LENGTH_SHORT).show()
+        // Implementation detail.
+        // Implementation detail.
+        Toast.makeText(this, "Added to AI chat. Open the AI Chat panel to view it.", Toast.LENGTH_SHORT).show()
     }
 
     private fun miniBtn(text: String, onClick: () -> Unit): Button {
@@ -1161,15 +1161,15 @@ class OverlayService : Service() {
     }
 
     private fun showWriteDialog(addr: String, curVal: Any?, machineCode: String = "") {
-        makeDraggablePanel("修改内存值", { content ->
-            content.addView(TextView(this).apply { text = "地址: $addr"; setTextColor(Color.parseColor("#4A6572")); textSize = 12f; setPadding(dp(12), dp(8), dp(12), dp(2)) })
+        makeDraggablePanel("Edit memory value", { content ->
+            content.addView(TextView(this).apply { text = "Address: $addr"; setTextColor(Color.parseColor("#4A6572")); textSize = 12f; setPadding(dp(12), dp(8), dp(12), dp(2)) })
             if (machineCode.isNotEmpty()) {
-                content.addView(TextView(this).apply { text = "机器码: $machineCode"; setTextColor(Color.parseColor("#3D5AFE")); textSize = 11f; setPadding(dp(12), dp(2), dp(12), dp(2)) })
+                content.addView(TextView(this).apply { text = "Machine code: $machineCode"; setTextColor(Color.parseColor("#3D5AFE")); textSize = 11f; setPadding(dp(12), dp(2), dp(12), dp(2)) })
             }
-            content.addView(TextView(this).apply { text = "当前值: $curVal"; setTextColor(Color.parseColor("#4A6572")); textSize = 12f; setPadding(dp(12), dp(2), dp(12), dp(8)) })
+            content.addView(TextView(this).apply { text = "Current value: $curVal"; setTextColor(Color.parseColor("#4A6572")); textSize = 12f; setPadding(dp(12), dp(2), dp(12), dp(8)) })
 
             val inp = EditText(this).apply {
-                hint = "输入新值"; setTextColor(Color.parseColor("#FFFFFF")); setHintTextColor(Color.parseColor("#FFFFFF"))
+                hint = "Enter a new value"; setTextColor(Color.parseColor("#FFFFFF")); setHintTextColor(Color.parseColor("#FFFFFF"))
                 background = GradientDrawable().apply { cornerRadius = dp(8).toFloat(); setColor(Color.parseColor("#304FFE")) }
                 setPadding(dp(12), dp(8), dp(12), dp(8))
                 inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL or android.text.InputType.TYPE_NUMBER_FLAG_SIGNED
@@ -1179,8 +1179,8 @@ class OverlayService : Service() {
             content.addView(inp)
 
             val bar = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(dp(12), dp(12), dp(12), dp(8)) }
-            bar.addView(smallBtn("取消") { showSearchPanel() }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-            bar.addView(smallBtn("确认修改") {
+            bar.addView(smallBtn("Cancel") { showSearchPanel() }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            bar.addView(smallBtn("Confirm edit") {
                 val nv = inp.text.toString()
                 if (nv.isEmpty()) return@smallBtn
                 val addrLong = addr.removePrefix("0x").removePrefix("0X").toLongOrNull(16) ?: return@smallBtn
@@ -1190,7 +1190,7 @@ class OverlayService : Service() {
                         else -> nv.toLongOrNull() ?: 0
                     }
                     val success = MemoryEngine.writeMemory(addrLong, numVal, searchDataType)
-                    // 修改完成后更新列表中该地址的值
+                    // Implementation detail.
                     if (success) {
                         searchResults = searchResults.map { r ->
                             val rAddr = (r["addressInt"] as? Number)?.toLong()
@@ -1201,10 +1201,10 @@ class OverlayService : Service() {
                     }
                     handler.post {
                         if (success) {
-                            Toast.makeText(this@OverlayService, "✅ 修改成功: $addr = $numVal", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@OverlayService, "✅ Edit succeeded: $addr = $numVal", Toast.LENGTH_SHORT).show()
                             showSearchPanel()
                         } else {
-                            Toast.makeText(this@OverlayService, "❌ 修改失败", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@OverlayService, "❌ Edit failed", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }.start()
@@ -1213,11 +1213,11 @@ class OverlayService : Service() {
         }, 280, 280, onBack = { showSearchPanel() })
     }
 
-    // 批量编辑对话框（支持单条和多条）
+    // Implementation detail.
     private fun showBatchEditDialog(selectedResults: List<Map<String, Any>>) {
         val count = selectedResults.size
-        makeDraggablePanel("编辑 $count 条数据", { content ->
-            // 显示选中的地址列表（机器码+值）
+        makeDraggablePanel("Edit $count items", { content ->
+            // Implementation detail.
             val addrList = selectedResults.joinToString("\n") { r ->
                 val addr = r["address"] as String
                 val v = r["value"]
@@ -1230,14 +1230,14 @@ class OverlayService : Service() {
                 maxLines = 6
             })
 
-            // 输入新值
+            // Enter a new value
             content.addView(TextView(this).apply {
-                text = "输入新值（将应用到所有 $count 条数据）："; setTextColor(Color.parseColor("#F2F3F8")); textSize = 12f
+                text = "Enter a new value (applied to all $count items):"; setTextColor(Color.parseColor("#F2F3F8")); textSize = 12f
                 setPadding(dp(12), dp(8), dp(12), dp(4))
             })
 
             val inp = EditText(this).apply {
-                hint = "输入新值"; setTextColor(Color.parseColor("#FFFFFF")); setHintTextColor(Color.parseColor("#FFFFFF"))
+                hint = "Enter a new value"; setTextColor(Color.parseColor("#FFFFFF")); setHintTextColor(Color.parseColor("#FFFFFF"))
                 background = GradientDrawable().apply { cornerRadius = dp(8).toFloat(); setColor(Color.parseColor("#304FFE")) }
                 setPadding(dp(12), dp(8), dp(12), dp(8))
                 inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL or android.text.InputType.TYPE_NUMBER_FLAG_SIGNED
@@ -1245,10 +1245,10 @@ class OverlayService : Service() {
             }
             content.addView(inp)
 
-            // 按钮
+            // button
             val bar = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(dp(12), dp(12), dp(12), dp(8)) }
-            bar.addView(smallBtn("取消") { showSearchPanel() }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-            bar.addView(smallBtn("确认修改") {
+            bar.addView(smallBtn("Cancel") { showSearchPanel() }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            bar.addView(smallBtn("Confirm edit") {
                 val nv = inp.text.toString()
                 if (nv.isEmpty()) return@smallBtn
 
@@ -1265,7 +1265,7 @@ class OverlayService : Service() {
                         val success = MemoryEngine.writeMemory(addrLong, numVal, searchDataType)
                         if (success) {
                             successCount++
-                            // 更新 searchResults 中对应地址的值
+                            // Implementation detail.
                             searchResults = searchResults.map { sr ->
                                 val srAddr = (sr["addressInt"] as? Number)?.toLong()
                                 if (srAddr == addrLong) {
@@ -1276,9 +1276,9 @@ class OverlayService : Service() {
                     }
                     handler.post {
                         if (successCount == count) {
-                            Toast.makeText(this@OverlayService, "✅ 成功修改 $successCount 条数据为 $numVal", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@OverlayService, "✅ Edited $successCount items to $numVal", Toast.LENGTH_SHORT).show()
                         } else {
-                            Toast.makeText(this@OverlayService, "⚠️ 修改完成：成功 $successCount/$count 条", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@OverlayService, "⚠️ Edit complete: $successCount/$count succeeded", Toast.LENGTH_SHORT).show()
                         }
                         selectedIndices.clear()
                         showSearchPanel()
@@ -1289,15 +1289,15 @@ class OverlayService : Service() {
         }, 300, 350)
     }
 
-    // ==================== 跳转到主应用 ====================
+    // Implementation detail.
 
     private fun jumpToPage(page: String) {
         closePanel()
         try {
-            // 保存到 SharedPreferences 作为备用
+            // Implementation detail.
             val prefs = getSharedPreferences("gg_overlay", Context.MODE_PRIVATE)
             prefs.edit().putString("pending_page", page).apply()
-            
+
             val intent = Intent(this, MainActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 putExtra("page", page)
@@ -1308,26 +1308,26 @@ class OverlayService : Service() {
         }
     }
 
-    // ==================== AI 对话面板 ====================
+    // Implementation detail.
 
     private fun showAIChatPanel() {
         saveLastPanel("chat")
-        makeDraggablePanel("AI 对话", { content ->
-            // AI 对话深色主题覆盖
+        makeDraggablePanel("AI Chat", { content ->
+            // Implementation detail.
             content.setBackgroundColor(Color.parseColor("#213333"))
 
-            // 获取附加进程信息
+            // Implementation detail.
             val prefs = getSharedPreferences("gg_overlay", Context.MODE_PRIVATE)
             val attachedPid = prefs.getInt("attached_pid", -1)
             val attachedName = prefs.getString("attached_name", "")
             val attachedPackage = prefs.getString("attached_package", "")
 
-            // 状态显示
+            // status display
             val status = TextView(this).apply {
                 text = if (attachedPid != -1 && !attachedName.isNullOrEmpty()) {
-                    "✅ 已附加: $attachedName"
+                    "✅ Attached: $attachedName"
                 } else {
-                    "⚠️ 未附加进程，请先附加游戏"
+                    "⚠️ not Attach Process,Attach firstgame "
                 }
                 setTextColor(if (attachedPid != -1) Color.parseColor("#66BB6A") else Color.parseColor("#FF8F00"))
                 textSize = 11f
@@ -1335,13 +1335,13 @@ class OverlayService : Service() {
             }
             content.addView(status)
 
-            // 分割线
+            // Implementation detail.
             content.addView(View(this).apply {
                 setBackgroundColor(Color.parseColor("#304FFE"))
                 layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(1))
             })
 
-            // 消息显示区域
+            // Implementation detail.
             val messageArea = ScrollView(this).apply {
                 layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f)
                 background = GradientDrawable().apply {
@@ -1354,31 +1354,31 @@ class OverlayService : Service() {
                 setPadding(dp(8), dp(8), dp(8), dp(8))
             }
 
-            // 如果是首次打开，添加欢迎消息
+            // Implementation detail.
             if (chatMessages.isEmpty()) {
                 val welcomeMsg = if (attachedPid != -1 && !attachedName.isNullOrEmpty()) {
-                    "🤖 AI 助手已就绪！\n\n当前已附加: $attachedName\n\n请告诉我你想修改什么游戏数据？\n\n💡 提示：如果切换其他附加进程后，记得清空聊天，以免 AI 读错上下文"
+                    "🤖 AI assistant ready!\n\nCurrently attached: $attachedName\n\nWhat game data would you like to edit?\n\n💡 Notice:If you switch processes, clear the chat so the AI does not use stale context"
                 } else {
-                    "🤖 AI 助手\n\n⚠️ 请先附加游戏进程\n点击返回 → 附加进程"
+                    "🤖 AI assistant\n\n⚠️ Attach to a game process first\ntap back  → Attach Process"
                 }
                 chatMessages.add(Pair("🤖 AI", welcomeMsg))
             }
 
-            // 恢复所有历史消息
+            // Implementation detail.
             for ((sender, msg) in chatMessages) {
-                val isUser = sender == "👤 我"
+                val isUser = sender == "👤 Me"
                 messageList.addView(createMessageBubble(sender, msg, isUser))
             }
 
             messageArea.addView(messageList)
             content.addView(messageArea)
 
-            // 恢复滚动位置，或滚动到底部
+            // Implementation detail.
             if (savedScrollY > 0) {
                 val restoreY = savedScrollY
                 savedScrollY = 0
                 messageArea.post { messageArea.scrollY = restoreY }
-                // WebView 异步加载后再次恢复（内容高度变化会导致位置偏移）
+                // Implementation detail.
                 messageArea.postDelayed({ messageArea.scrollY = restoreY }, 500)
                 messageArea.postDelayed({ messageArea.scrollY = restoreY }, 1500)
             } else {
@@ -1387,7 +1387,7 @@ class OverlayService : Service() {
                 messageArea.postDelayed({ messageArea.fullScroll(ScrollView.FOCUS_DOWN) }, 1500)
             }
 
-            // 输入区域
+            // Implementation detail.
             val inputArea = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 setPadding(dp(5), dp(5), dp(5), dp(5))
@@ -1395,7 +1395,7 @@ class OverlayService : Service() {
             }
 
             val inputField = EditText(this).apply {
-                hint = "输入你的需求..."
+                hint = "Describe what you need..."
                 setTextColor(Color.parseColor("#000000"))
                 setHintTextColor(Color.parseColor("#4A6572"))
                 textSize = 13f
@@ -1435,7 +1435,7 @@ class OverlayService : Service() {
             }
 
             val sendBtn = TextView(this).apply {
-                text = "发送"
+                text = "Send"
                 setTextColor(Color.parseColor("#F2F3F8"))
                 textSize = 12f
                 gravity = android.view.Gravity.CENTER
@@ -1447,16 +1447,16 @@ class OverlayService : Service() {
                 setOnClickListener {
                     val userInput = inputField.text.toString().trim()
                     if (userInput.isNotEmpty() && !isAiResponding) {
-                        // 添加用户消息到历史
-                        chatMessages.add(Pair("👤 我", userInput))
-                        messageList.addView(createMessageBubble("👤 我", userInput, true))
+                        // Implementation detail.
+                        chatMessages.add(Pair("👤 Me", userInput))
+                        messageList.addView(createMessageBubble("👤 Me", userInput, true))
                         inputField.text.clear()
 
-                        // 隐藏输入法
+                        // Implementation detail.
                         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
                         imm.hideSoftInputFromWindow(inputField.windowToken, 0)
 
-                        // 创建流式输出气泡
+                        // Implementation detail.
                         isAiResponding = true
                         val streamBubble = LinearLayout(this@OverlayService).apply {
                             orientation = LinearLayout.VERTICAL
@@ -1472,7 +1472,7 @@ class OverlayService : Service() {
                             setPadding(0, 0, 0, dp(2))
                         })
                         val streamText = TextView(this@OverlayService).apply {
-                            text = "正在思考..."
+                            text = "Thinking..."
                             setTextColor(Color.parseColor("#F2F3F8"))
                             textSize = 12f
                             background = GradientDrawable().apply {
@@ -1485,7 +1485,7 @@ class OverlayService : Service() {
                         messageList.addView(streamBubble)
                         messageArea.post { messageArea.fullScroll(ScrollView.FOCUS_DOWN) }
 
-                        // 调用 LLM API（支持 function calling）
+                        // Implementation detail.
                         Thread {
                             try {
                                 val result = callLlmApi(userInput, attachedName ?: "")
@@ -1498,7 +1498,7 @@ class OverlayService : Service() {
                                 }
                             } catch (e: Exception) {
                                 handler.post {
-                                    val errorMsg = "❌ 请求失败: ${e.message}\n\n请检查设置中的 API 配置"
+                                    val errorMsg = "❌ Request failed: ${e.message}\n\nCheck the API configuration in Settings"
                                     chatMessages.add(Pair("🤖 AI", errorMsg))
                                     isAiResponding = false
                                     streamBubble.removeView(streamText)
@@ -1515,7 +1515,7 @@ class OverlayService : Service() {
             inputArea.addView(sendBtn)
             content.addView(inputArea)
 
-            // 底部按钮栏：保存聊天 + 清空聊天 + 关闭窗口
+            // Implementation detail.
             val actionBar = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 setPadding(dp(5), dp(5), dp(5), dp(5))
@@ -1529,28 +1529,28 @@ class OverlayService : Service() {
                     setOnClickListener { onClick() }
                 }
             }
-            actionBar.addView(smallBtnStyle("保存") { saveChatToStorage() }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-            actionBar.addView(smallBtnStyle("清空") {
+            actionBar.addView(smallBtnStyle("Save") { saveChatToStorage() }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            actionBar.addView(smallBtnStyle("Clear") {
                 chatMessages.clear()
                 messageList.removeAllViews()
                 val welcomeMsg = if (attachedPid != -1 && !attachedName.isNullOrEmpty()) {
-                    "🤖 AI 助手已就绪！\n\n当前已附加: $attachedName\n\n请告诉我你想修改什么游戏数据？\n\n💡 提示：如果切换其他附加进程后，记得清空聊天，以免 AI 读错上下文"
+                    "🤖 AI assistant ready!\n\nCurrently attached: $attachedName\n\nWhat game data would you like to edit?\n\n💡 Notice:If you switch processes, clear the chat so the AI does not use stale context"
                 } else {
-                    "🤖 AI 助手\n\n⚠️ 请先附加游戏进程"
+                    "🤖 AI assistant\n\n⚠️ Attach to a game process first"
                 }
                 chatMessages.add(Pair("🤖 AI", welcomeMsg))
                 messageList.addView(createMessageBubble("🤖 AI", welcomeMsg, false))
             }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-            actionBar.addView(smallBtnStyle("关闭") { closePanel() }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            actionBar.addView(smallBtnStyle("disable ") { closePanel() }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
             content.addView(actionBar)
 
-            // 滚动到底部
+            // Implementation detail.
             messageArea.post { messageArea.fullScroll(ScrollView.FOCUS_DOWN) }
 
         }, 320, 550, titleIcon = R.drawable.ai, bgColor = "#000000")
     }
 
-    // 创建消息气泡（用户消息用 TextView，AI 消息用 WebView 渲染 Markdown/LaTeX/Mermaid）
+    // Implementation detail.
     private fun createMessageBubble(sender: String, message: String, isUser: Boolean): LinearLayout {
         return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -1560,7 +1560,7 @@ class OverlayService : Service() {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply { bottomMargin = dp(8) }
 
-            // 发送者标签
+            // Implementation detail.
             addView(TextView(this@OverlayService).apply {
                 text = sender
                 setTextColor(if (isUser) Color.parseColor("#3D5AFE") else Color.parseColor("#536DFE"))
@@ -1569,7 +1569,7 @@ class OverlayService : Service() {
             })
 
             if (isUser) {
-                // 用户消息用 TextView
+                // Implementation detail.
                 addView(TextView(this@OverlayService).apply {
                     text = message
                     setTextColor(Color.parseColor("#F2F3F8"))
@@ -1581,21 +1581,21 @@ class OverlayService : Service() {
                     setPadding(dp(12), dp(8), dp(12), dp(8))
                 })
             } else {
-                // AI 消息统一用 WebView 渲染（支持 Markdown、代码块、Mermaid 图表）
-                // 边框由 HTML CSS 中的 .bubble-ai 样式处理
+                // Implementation detail.
+                // Implementation detail.
                 addView(createMarkdownWebView(message))
             }
         }
     }
 
     /**
-     * LaTeX 预处理（在转义之前处理原始 Markdown 内容）
-     * 参考 chatbox 的 latex.ts：标准化 LaTeX 分隔符，保护代码块不被误解析
+     * Implementation detail.
+     * Implementation detail.
      */
     private fun preprocessLaTeX(content: String): String {
         var result = content
 
-        // Step 1: 保护代码块（用占位符替换，防止内部被处理）
+        // Implementation detail.
         val codeBlocks = mutableListOf<String>()
         val codeBlockRegex = Regex("(```[\\s\\S]*?```|`[^`\\n]+`)")
         result = codeBlockRegex.replace(result) { match ->
@@ -1603,7 +1603,7 @@ class OverlayService : Service() {
             "<<CODE_BLOCK_${codeBlocks.size - 1}>>"
         }
 
-        // Step 2: 保护已有的 LaTeX 表达式
+        // Implementation detail.
         val latexExpressions = mutableListOf<String>()
         val latexRegex = Regex("(\\$\\$[\\s\\S]*?\\$\\$|\\$[^$\\n]*?\\$|\\\\\\[[\\s\\S]*?\\\\]|\\\\\\(.*?\\\\\\))")
         result = latexRegex.replace(result) { match ->
@@ -1611,26 +1611,26 @@ class OverlayService : Service() {
             "<<LATEX_${latexExpressions.size - 1}>>"
         }
 
-        // Step 3: 转义货币符号（$后跟数字的情况）
+        // Implementation detail.
         result = result.replace(Regex("\\$(?=\\d)"), "\\$")
 
-        // Step 4: 恢复 LaTeX 表达式
+        // Implementation detail.
         result = result.replace(Regex("<<LATEX_(\\d+)>>")) { match ->
             val index = match.groupValues[1].toInt()
             latexExpressions[index]
         }
 
-        // Step 5: 恢复代码块
+        // Implementation detail.
         result = result.replace(Regex("<<CODE_BLOCK_(\\d+)>>")) { match ->
             val index = match.groupValues[1].toInt()
             codeBlocks[index]
         }
 
-        // Step 6: 标准化括号分隔符 \[...\] -> $$...$$，\(...\) -> $...$
+        // Implementation detail.
         val bracketRegex = Regex("(```[\\S\\s]*?```|`.*?`)|\\\\\\[([\\S\\s]*?[^\\\\])\\\\]|\\\\\\((.*?)\\\\\\)")
         result = bracketRegex.replace(result) { match ->
             when {
-                match.groupValues[1].isNotEmpty() -> match.groupValues[1] // 代码块，跳过
+                match.groupValues[1].isNotEmpty() -> match.groupValues[1] // Code block; skip
                 match.groupValues[2].isNotEmpty() -> "$$${match.groupValues[2]}$$" // \[...\] -> $$...$$
                 match.groupValues[3].isNotEmpty() -> "$${match.groupValues[3]}$" // \(...\) -> $...$
                 else -> match.value
@@ -1641,11 +1641,11 @@ class OverlayService : Service() {
     }
 
     /**
-     * 创建 WebView 渲染 Markdown/LaTeX/Mermaid
+     * Implementation detail.
      */
     private fun createMarkdownWebView(markdownContent: String): WebView {
-        // 仅转义 JS 字符串必须转义的字符：反斜杠、单引号、换行
-        // $ 和 ` 不转义（占位符方式注入，不会触发 Kotlin 模板插值）
+        // Implementation detail.
+        // Implementation detail.
         val escapedContent = markdownContent
             .replace("\\", "\\\\")
             .replace("'", "\\'")
@@ -1744,7 +1744,7 @@ class OverlayService : Service() {
         -webkit-overflow-scrolling: touch;
         max-width: 100%;
     }
-    /* 聊天气泡 */
+    /* Chat bubble */
     .msg { margin-bottom: 16px; }
     .msg-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
     .msg-icon { font-size: 14px; }
@@ -1757,23 +1757,23 @@ class OverlayService : Service() {
     .msg-user .msg-sender { color: #3D5AFE; }
     .msg-ai .msg-sender { color: #536DFE; }
 </style>
-<!-- Prism.js 代码高亮 (本地) -->
+<!-- Local library. -->
 <link rel="stylesheet" href="file:///android_asset/css/prism-tomorrow.min.css">
 <script src="file:///android_asset/js/prism.min.js"></script>
-<!-- KaTeX for LaTeX (本地) -->
+<!-- Local library. -->
 <link rel="stylesheet" href="file:///android_asset/css/katex.min.css">
 <script src="file:///android_asset/js/katex.min.js"></script>
 <script src="file:///android_asset/js/auto-render.min.js"></script>
-<!-- Marked for Markdown (本地) -->
+<!-- Local library. -->
 <script src="file:///android_asset/js/marked.min.js"></script>
-<!-- Mermaid for diagrams (本地) -->
+<!-- Local library. -->
 <script src="file:///android_asset/js/mermaid.min.js"></script>
 </head>
 <body>
 <div id="content"></div>
 <script>
 (function() {
-    // 初始化 Mermaid
+    // Implementation detail.
     mermaid.initialize({
         startOnLoad: false,
         theme: 'dark',
@@ -1787,7 +1787,7 @@ class OverlayService : Service() {
         }
     });
 
-    // 配置 marked + Prism.js 代码高亮
+    // Implementation detail.
     var renderer = new marked.Renderer();
     renderer.code = function(code, lang) {
         var codeText = (typeof code === 'object') ? code.text : code;
@@ -1805,26 +1805,26 @@ class OverlayService : Service() {
 
     var rawContent = '___CONTENT_PLACEHOLDER___';
 
-    // ====== LaTeX 保护：在 marked 解析前，用占位符保护 LaTeX 表达式 ======
+    // Implementation detail.
     var latexStore = [];
     function protectLaTeX(text) {
-        // 保护代码块
+        // Implementation detail.
         var codeBlocks = [];
         text = text.replace(/(```[\s\S]*?```|`[^`\n]+`)/g, function(m, c) {
             codeBlocks.push(c);
             return '\x00CODE' + (codeBlocks.length-1) + '\x00';
         });
-        // 保护 $$...$$ (display)
+        // Implementation detail.
         text = text.replace(/\$\$([\s\S]*?)\$\$/g, function(m, inner) {
             latexStore.push('$$' + inner + '$$');
             return '\x00LATEX' + (latexStore.length-1) + '\x00';
         });
-        // 保护 $...$ (inline)
+        // Implementation detail.
         text = text.replace(/\$([^\$\n]+?)\$/g, function(m, inner) {
             latexStore.push('$' + inner + '$');
             return '\x00LATEX' + (latexStore.length-1) + '\x00';
         });
-        // 保护 \[...\] 和 \(...\)
+        // Implementation detail.
         text = text.replace(/\\\[([\s\S]*?)\\\]/g, function(m, inner) {
             latexStore.push('$$' + inner + '$$');
             return '\x00LATEX' + (latexStore.length-1) + '\x00';
@@ -1833,28 +1833,28 @@ class OverlayService : Service() {
             latexStore.push('$' + inner + '$');
             return '\x00LATEX' + (latexStore.length-1) + '\x00';
         });
-        // 恢复代码块
+        // Implementation detail.
         text = text.replace(/\x00CODE(\d+)\x00/g, function(m, i) { return codeBlocks[parseInt(i)]; });
         return text;
     }
 
-    // ====== 第一步：保护 LaTeX ======
+    // Implementation detail.
     var protectedContent = protectLaTeX(rawContent);
 
-    // ====== 第二步：marked 解析 Markdown ======
+    // Implementation detail.
     var htmlContent = marked.parse(protectedContent);
 
-    // ====== 第三步：恢复 LaTeX 占位符 ======
+    // Implementation detail.
     htmlContent = htmlContent.replace(/\x00LATEX(\d+)\x00/g, function(m, i) {
         return '<span class="katex-placeholder" data-latex="' +
             latexStore[parseInt(i)].replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;') +
             '"></span>';
     });
 
-    // ====== 第四步：注入 DOM ======
+    // Implementation detail.
     document.getElementById('content').innerHTML = htmlContent;
 
-    // ====== 第五步：分离 mermaid 代码块，转为 <div class="mermaid"> ======
+    // Implementation detail.
     var mermaidBlocks = document.querySelectorAll('code.language-mermaid');
     mermaidBlocks.forEach(function(block, idx) {
         var pre = block.parentElement;
@@ -1864,7 +1864,7 @@ class OverlayService : Service() {
         pre.parentNode.replaceChild(div, pre);
     });
 
-    // ====== 第六步：表格滚动包裹 ======
+    // Implementation detail.
     document.querySelectorAll('#content table').forEach(function(table) {
         var wrapper = document.createElement('div');
         wrapper.className = 'table-wrapper';
@@ -1872,7 +1872,7 @@ class OverlayService : Service() {
         wrapper.appendChild(table);
     });
 
-    // ====== 第七步：渲染 LaTeX (KaTeX) ======
+    // Implementation detail.
     document.querySelectorAll('.katex-placeholder').forEach(function(el) {
         var latex = el.getAttribute('data-latex');
         try {
@@ -1885,14 +1885,14 @@ class OverlayService : Service() {
         }
     });
 
-    // ====== 第八步：渲染 Mermaid（异步）并通知高度 ======
+    // Implementation detail.
     var notifyDone = function() {
-        // 告知 WebView 内容已全部渲染完毕，可以测量高度
+        // Implementation detail.
         window.__renderDone = true;
     };
 
     if (mermaidBlocks.length > 0) {
-        // 兼容 mermaid v10 (run) 和 v8/v9 (init)
+        // Implementation detail.
         if (typeof mermaid.run === 'function') {
             mermaid.run().then(function() { notifyDone(); }).catch(function(e) {
                 console.error('Mermaid error:', e);
@@ -1934,7 +1934,7 @@ class OverlayService : Service() {
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
-                    // 等待渲染完成（含 mermaid 异步）后再测量高度
+                    // Implementation detail.
                     view?.evaluateJavascript(
                         """
                         (function() {
@@ -1942,7 +1942,7 @@ class OverlayService : Service() {
                                 if (window.__renderDone) {
                                     return document.body.scrollHeight;
                                 }
-                                // 每 100ms 检查一次，最多 5 秒
+                                // Implementation detail.
                                 var tries = 0;
                                 var timer = setInterval(function() {
                                     tries++;
@@ -1961,12 +1961,12 @@ class OverlayService : Service() {
                         try {
                             val initial = value.replace("\"", "").toFloatOrNull() ?: 0f
                             if (initial > 0) {
-                                // 渲染已完成，直接调整
+                                // Implementation detail.
                                 val layoutParams = this@apply.layoutParams
                                 layoutParams.height = (initial * resources.displayMetrics.density).toInt() + dp(20)
                                 this@apply.layoutParams = layoutParams
                             } else {
-                                // 等待异步渲染完成后轮询高度
+                                // Implementation detail.
                                 val handler = android.os.Handler(android.os.Looper.getMainLooper())
                                 val checkRunnable = object : Runnable {
                                     override fun run() {
@@ -1994,10 +1994,10 @@ class OverlayService : Service() {
         }
     }
 
-    // ==================== 真实 LLM API 调用 ====================
+    // Implementation detail.
 
     private fun callLlmApi(userInput: String, attachedApp: String): String {
-        // 从 SharedPreferences 读取 LLM 配置（由主应用保存）
+        // Implementation detail.
         val configPrefs = getSharedPreferences("gg_llm_config", Context.MODE_PRIVATE)
         val configJson = configPrefs.getString("config", null)
 
@@ -2012,65 +2012,65 @@ class OverlayService : Service() {
                 apiKey = json.optString("apiKey", "")
                 model = json.optString("model", "deepseek-chat")
             } catch (e: Exception) {
-                // 解析失败，使用默认值
+                // Implementation detail.
             }
         }
 
-        // 如果没有配置 API，返回提示
+        // Implementation detail.
         if (baseUrl.isEmpty() || apiKey.isEmpty()) {
-            return "⚠️ 请先在设置中配置 LLM API\n\n打开主应用 → 设置 → LLM API 配置\n\n当前支持：DeepSeek、OpenAI、小米 MiMo 等"
+            return "⚠️ Configure the LLM API in Settings first\n\nOpen the main app → Settings → LLM API Configuration\n\nSupported: DeepSeek, OpenAI, Xiaomi MiMo, and more"
         }
 
-        // 构建系统提示（注入当前模型信息）
+        // Implementation detail.
         val modelInfo = getModelInfo(model)
         val systemPrompt = buildString {
-            append("你是 GG-AI 游戏内存修改助手。你当前使用的底层大模型是：$modelInfo。\n")
-            append("当用户问你是什么模型时，你必须回答「$modelInfo」，这是你真实运行的底层模型。GG-AI 只是这个应用的名称，不是你的模型名称。不要编造其他模型名称。\n\n")
-            append("## 核心行为准则\n")
-            append("当用户要求搜索、读取、修改内存数据时，你必须调用工具（search_memory / read_memory / write_memory）来执行真实操作，返回真实结果。\n")
-            append("绝对不要模拟、编造搜索结果或内存地址。不要在回复中写 gg.searchNumber 等代码来代替真实操作。\n")
-            append("搜索结果中的「机器码」是该地址处的原始字节，可用于判断地址是否正确。\n")
-            append("修改值后，工具会自动回读验证。如果回读值与目标不同，说明写入可能失败。\n\n")
-            append("## 脚本生成\n")
-            append("只有当用户明确说「写脚本」「生成脚本」「写个lua」等要求生成脚本时，才输出 Lua 脚本。\n")
-            append("Lua 脚本规范（luaj-jse-3.0.2.jar 环境）：\n")
-            append("- 使用 GG API：gg.searchNumber、gg.getResults、gg.editAll、gg.clearResults\n")
-            append("- type 常量：gg.TYPE_DWORD、gg.TYPE_FLOAT、gg.TYPE_DOUBLE、gg.TYPE_BYTE、gg.TYPE_WORD、gg.TYPE_QWORD\n")
-            append("- UI：gg.toast、gg.alert、gg.prompt、gg.choice\n")
-            append("- 用 ```lua 代码块包裹\n\n")
+            append("You are GG-AI, a game-memory assistant. The underlying model is: $modelInfo.\n")
+            append("When asked which model you are, answer exactly \"$modelInfo\". GG-AI is the app name, not the model name. Do not invent another model name.\n\n")
+            append("## Core behavior rules\n")
+            append("When the user requests a search, read, or edit, call the tool (search_memory / read_memory / write_memory) to perform the real operation and return real results.\n")
+            append("Never simulate or invent search results or addresses. Do not write gg.searchNumber or similar code instead of performing the real operation.\n")
+            append("The machine code in search results is the raw bytes at that address and can help verify it.\n")
+            append("After editing, the tool reads the value back for verification. If the read-back value differs from the target, the write may have failed.\n\n")
+            append("## Script generation\n")
+            append("Only output a Lua script when the user explicitly asks to write or generate one.\n")
+            append("Lua script requirements (luaj-jse-3.0.2.jar environment):\n")
+            append("- use  GG API:gg.searchNumber, gg.getResults, gg.editAll, gg.clearResults\n")
+            append("- type constants:gg.TYPE_DWORD, gg.TYPE_FLOAT, gg.TYPE_DOUBLE, gg.TYPE_BYTE, gg.TYPE_WORD, gg.TYPE_QWORD\n")
+            append("- UI:gg.toast, gg.alert, gg.prompt, gg.choice\n")
+            append("- Wrap it in a ```lua code block\n\n")
             if (attachedApp.isNotEmpty()) {
-                append("当前已附加游戏进程: $attachedApp\n")
+                    append("Currently attached game process: $attachedApp\n")
             }
-            append("\n渲染支持：当前客户端支持 Markdown 渲染、代码块高亮、LaTeX 数学公式和 Mermaid 图表。")
-            append("当用户要求画图、画表、画流程图、架构图、思维导图、时序图、甘特图等可视化内容时，你必须直接输出 Mermaid 代码块，不要解释，不要用文字描述，直接给出代码。")
-            append("用 ```mermaid 代码块包裹，客户端会自动渲染成图表。\n")
-            append("⚠️ Mermaid 版本为 8.14.0，必须严格使用该版本兼容语法：\n")
-            append("- 流程图用 `graph TD` 或 `graph LR`（不要用 flowchart）\n")
-            append("- 支持的图表类型：graph、sequenceDiagram、classDiagram、stateDiagram、gantt、pie\n")
-            append("- 不支持：mindmap、timeline、quadrantChart、block-beta、sankey-beta、xychart-beta 等新类型\n")
-            append("- 不要使用 `%%{init: ...}%%` 配置指令\n")
-            append("- 节点文本中的特殊字符用双引号包裹，如 A[\"(特殊)文本\"]\n")
-            append("示例：\n")
-            append("```mermaid\ngraph TD\n    A[搜索金币值] --> B[消费金币]\n    B --> C[再次搜索]\n    C --> D[确认地址]\n    D --> E[修改值]\n```\n\n")
-            append("LaTeX 公式支持：用 ${'$'}...${'$'} 包裹行内公式，${'$'}${'$'}...${'$'}${'$'} 包裹独立公式。示例：${'$'}E=mc^2${'$'}，${'$'}${'$'}\\int_0^1 x dx = \\frac{1}{2}${'$'}${'$'}\n\n")
-            append("回复格式：\n")
-            append("- 使用简洁友好的中文\n")
-            append("- 操作步骤用编号列出\n")
-            append("- 执行结果用 ✅ 或 ❌ 标记\n")
-            append("- 地址和数值用代码格式显示\n")
-            append("- 用户要求画图时，直接输出 mermaid 代码块，不要多余文字\n\n")
+            append("\nRendering support: The client supports Markdown rendering and code-block highlighting, LaTeX formulas and Mermaid diagrams.")
+            append("When asked for a diagram, output a Mermaid code block directly without explanation.")
+            append("Wrap it in a ```mermaid code block; the client renders it automatically.\n")
+            append("⚠️ Mermaid version 8.14.0; use only compatible syntax:\n")
+            append("- For flowcharts, use `graph TD`  or  `graph LR` (do not use flowchart)\n")
+            append("- Supported chart types:graph, sequenceDiagram, classDiagram, stateDiagram, gantt, pie\n")
+            append("- Unsupported:mindmap, timeline, quadrantChart, block-beta, sankey-beta, xychart-beta and other newer types \n")
+            append("- do not use  `%%{init: ...}%%` configuration directives\n")
+            append("- Wrap special characters in node text in double quotes, e.g. A[\"(special) text\"]\n")
+            append("Example:\n")
+            append("```mermaid\ngraph TD\n    A[Search coin value ] --> B[spend coins]\n    B --> C[search again]\n    C --> D[Confirm address ]\n    D --> E[Edit value]\n```\n\n")
+            append("LaTeX formulas: use ${'$'}...${'$'} for inline formulas,${'$'}${'$'}...${'$'}${'$'} for display formulas.Example:${'$'}E=mc^2${'$'},${'$'}${'$'}\\int_0^1 x dx = \\frac{1}{2}${'$'}${'$'}\n\n")
+            append("Response format:\n")
+            append("- Use concise, friendly English\n")
+            append("- List steps numerically\n")
+            append("- Mark results with ✅ or ❌\n")
+            append("- Display addresses and values as code \n")
+            append("- When a diagram is requested, output only a Mermaid code block\n\n")
 
-            // 读取已启用的 Skill
+            // read Enabled of  Skill
             try {
                 val skillsPrefs = getSharedPreferences("gg_skills", Context.MODE_PRIVATE)
                 val skillsJson = skillsPrefs.getString("skills", "[]") ?: "[]"
                 val skillsArray = org.json.JSONArray(skillsJson)
                 if (skillsArray.length() > 0) {
-                    append("## 已导入的 Skill\n")
-                    append("以下 Skill 已启用，请在回复时参考和运用这些 Skill 的知识：\n\n")
+                    append("## Imported Skills\n")
+                    append("The following skills are enabled; use their knowledge when replying:\n\n")
                     for (i in 0 until skillsArray.length()) {
                         val skill = skillsArray.getJSONObject(i)
-                        val name = skill.optString("name", "未知")
+                        val name = skill.optString("name", "Unknown")
                         val content = skill.optString("content", "")
                         append("### 📖 $name\n")
                         append("$content\n\n")
@@ -2081,7 +2081,7 @@ class OverlayService : Service() {
             }
         }
 
-        // 构建消息历史（最近 10 条）
+        // Implementation detail.
         val messages = JSONArray()
         messages.put(JSONObject().apply {
             put("role", "system")
@@ -2090,23 +2090,23 @@ class OverlayService : Service() {
 
         val recentMessages = chatMessages.takeLast(10)
         for ((sender, msg) in recentMessages) {
-            val role = if (sender == "👤 我") "user" else "assistant"
+            val role = if (sender == "👤 Me") "user" else "assistant"
             messages.put(JSONObject().apply {
                 put("role", role)
                 put("content", msg)
             })
         }
 
-        // 添加当前用户消息
+        // Implementation detail.
         messages.put(JSONObject().apply {
             put("role", "user")
             put("content", userInput)
         })
 
-        // 检测是否是 Gemini API
+        // Implementation detail.
         val isGemini = baseUrl.contains("generativelanguage.googleapis.com")
-        // Gemini 使用 OpenAI 兼容接口: /v1beta/openai/
-        // 避免重复添加 /v1beta/openai
+        // Implementation detail.
+        // Implementation detail.
         val effectiveBaseUrl = if (isGemini) {
             val base = baseUrl.trimEnd('/')
             if (base.endsWith("/v1beta/openai")) base else "$base/v1beta/openai"
@@ -2114,28 +2114,28 @@ class OverlayService : Service() {
             baseUrl.trimEnd('/')
         }
 
-        // 定义工具
+        // Implementation detail.
         val tools = JSONArray().apply {
             put(JSONObject().apply {
                 put("type", "function")
                 put("function", JSONObject().apply {
                     put("name", "search_memory")
-                    put("description", "在游戏内存中搜索数值。支持精确搜索、范围搜索、AOB搜索。返回匹配的内存地址列表。")
+                    put("description", "Search values in game memory. Supports exact, range, and AOB searches and returns matching addresses.")
                     put("parameters", JSONObject().apply {
                         put("type", "object")
                         put("properties", JSONObject().apply {
                             put("mode", JSONObject().apply {
                                 put("type", "string")
-                                put("description", "搜索模式：exact(精确)、range(范围)、aob(AOB特征码)")
+                                put("description", "Search mode:exact(Exact), range(Range), aob(AOBSignature)")
                                 put("enum", JSONArray().apply { put("exact"); put("range"); put("aob") })
                             })
                             put("value", JSONObject().apply {
                                 put("type", "string")
-                                put("description", "搜索值。exact模式填数值如'750000'；range模式填'最小值,最大值'如'100,200'；aob模式填特征码如'48 8B 05 ?? ??'")
+                                put("description", "Search value. For exact mode, enter a value such as'750000';for range, use 'Minimum,Maximum' such as '100,200'; for AOB, use a signature such as '48 8B 05 ?? ??'")
                             })
                             put("type", JSONObject().apply {
                                 put("type", "string")
-                                put("description", "数据类型：dword(整数4字节)、float(浮点)、double(双精度)、byte(1字节)、word(2字节)、qword(8字节)")
+                                put("description", "Data type:dword(integer, 4 bytes), float(float), double(double), byte(1 bytes), word(2 bytes), qword(8 bytes)")
                                 put("enum", JSONArray().apply { put("dword"); put("float"); put("double"); put("byte"); put("word"); put("qword") })
                             })
                         })
@@ -2147,17 +2147,17 @@ class OverlayService : Service() {
                 put("type", "function")
                 put("function", JSONObject().apply {
                     put("name", "read_memory")
-                    put("description", "从指定内存地址读取值。")
+                    put("description", "Read a value from the specified memory address.")
                     put("parameters", JSONObject().apply {
                         put("type", "object")
                         put("properties", JSONObject().apply {
                             put("address", JSONObject().apply {
                                 put("type", "string")
-                                put("description", "内存地址，十六进制如'0x12345678'")
+                                put("description", "memoryaddress ,hexadecimal, e.g.'0x12345678'")
                             })
                             put("type", JSONObject().apply {
                                 put("type", "string")
-                                put("description", "数据类型")
+                                put("description", "data type ")
                                 put("enum", JSONArray().apply { put("dword"); put("float"); put("double"); put("byte"); put("word"); put("qword") })
                             })
                         })
@@ -2169,21 +2169,21 @@ class OverlayService : Service() {
                 put("type", "function")
                 put("function", JSONObject().apply {
                     put("name", "write_memory")
-                    put("description", "向指定内存地址写入值。")
+                    put("description", "Write a value to the specified memory address.")
                     put("parameters", JSONObject().apply {
                         put("type", "object")
                         put("properties", JSONObject().apply {
                             put("address", JSONObject().apply {
                                 put("type", "string")
-                                put("description", "内存地址，十六进制如'0x12345678'")
+                                put("description", "memoryaddress ,hexadecimal, e.g.'0x12345678'")
                             })
                             put("value", JSONObject().apply {
                                 put("type", "string")
-                                put("description", "要写入的值")
+                                put("description", "write  of value ")
                             })
                             put("type", JSONObject().apply {
                                 put("type", "string")
-                                put("description", "数据类型")
+                                put("description", "data type ")
                                 put("enum", JSONArray().apply { put("dword"); put("float"); put("double"); put("byte"); put("word"); put("qword") })
                             })
                         })
@@ -2193,7 +2193,7 @@ class OverlayService : Service() {
             })
         }
 
-        // 统一使用 OpenAI 兼容接口（Gemini 使用 /v1beta/openai/）
+        // Implementation detail.
         val url = URL("$effectiveBaseUrl/chat/completions")
         android.util.Log.d("GG-AI", "API URL: $url")
         android.util.Log.d("GG-AI", "Model: $model")
@@ -2209,11 +2209,11 @@ class OverlayService : Service() {
         val responseText = doHttpPost(url, apiKey, requestBody)
         val responseJson = JSONObject(responseText)
         val choices = responseJson.getJSONArray("choices")
-        if (choices.length() == 0) return "❌ 未收到 AI 回复"
+        if (choices.length() == 0) return "❌ No AI response received"
 
         val msg = choices.getJSONObject(0).getJSONObject("message")
 
-        // 检查是否有工具调用
+        // Implementation detail.
         if (msg.has("tool_calls") && !msg.isNull("tool_calls")) {
             messages.put(msg)
 
@@ -2246,10 +2246,10 @@ class OverlayService : Service() {
             if (finalChoices.length() > 0) {
                 return finalChoices.getJSONObject(0).getJSONObject("message").getString("content")
             }
-            return "❌ 未收到 AI 回复"
+            return "❌ No AI response received"
         }
 
-        return msg.optString("content", "❌ 未收到 AI 回复")
+        return msg.optString("content", "❌ No AI response received")
     }
 
     private fun doHttpPost(url: URL, apiKey: String, body: JSONObject): String {
@@ -2267,7 +2267,7 @@ class OverlayService : Service() {
         val code = conn.responseCode
         android.util.Log.d("GG-AI", "HTTP Response: $code, URL: ${url}")
         if (code != 200) {
-            val err = conn.errorStream?.bufferedReader()?.readText() ?: "未知错误"
+            val err = conn.errorStream?.bufferedReader()?.readText() ?: "Unknown error"
             android.util.Log.e("GG-AI", "HTTP Error: $code, Body: $err")
             throw Exception("HTTP $code: $err")
         }
@@ -2285,80 +2285,80 @@ class OverlayService : Service() {
                     val mode = args.optString("mode", "exact")
                     val value = args.optString("value", "")
                     val type = args.optString("type", "dword")
-                    if (MemoryEngine.getAttachedPid() == null) return "❌ 未附加游戏进程，请先附加"
+                    if (MemoryEngine.getAttachedPid() == null) return "❌ No game process attached,Attach first"
                     when (mode) {
                         "exact" -> {
                             val numVal: Any = if (type == "float" || type == "double") value.toDoubleOrNull() ?: 0.0 else value.toLongOrNull() ?: 0
                             val res = MemoryEngine.searchExact(numVal, type)
-                            if (res.isEmpty()) return "搜索完成，未找到结果"
-                            val sb = StringBuilder("找到 ${res.size} 个结果：\n")
+                            if (res.isEmpty()) return "Search complete; no results found"
+                            val sb = StringBuilder("Found ${res.size}  results:\n")
                             for ((idx, r) in res.take(50).withIndex()) {
                                 val addr = r["address"] ?: ""
                                 val mc = r["machineCode"] ?: ""
                                 val v = r["value"] ?: ""
                                 sb.append("${idx + 1}. $addr [$mc] = $v\n")
                             }
-                            if (res.size > 50) sb.append("... 共 ${res.size} 个结果")
-                            sb.append("\n请分析机器码判断哪个地址是目标数据，再使用 write_memory 修改。")
+                            if (res.size > 50) sb.append("... ${res.size} total results")
+                            sb.append("\nAnalyze the machine code to identify the target address, then use write_memory to edit it.")
                             sb.toString()
                         }
                         "range" -> {
                             val parts = value.split(",")
-                            if (parts.size != 2) return "❌ 范围格式错误，应为 '最小值,最大值'"
+                            if (parts.size != 2) return "❌ Invalid range format; expected 'Minimum,Maximum'"
                             val lo = parts[0].trim().toLongOrNull() ?: 0
                             val hi = parts[1].trim().toLongOrNull() ?: 0
                             val res = MemoryEngine.searchByRange(lo, hi, type)
-                            if (res.isEmpty()) return "搜索完成，未找到结果"
-                            val sb = StringBuilder("找到 ${res.size} 个结果：\n")
+                            if (res.isEmpty()) return "Search complete; no results found"
+                            val sb = StringBuilder("Found ${res.size}  results:\n")
                             for ((idx, r) in res.take(50).withIndex()) {
-                                sb.append("${idx + 1}. 地址: ${r["address"]}, 值: ${r["value"]}\n")
+                                sb.append("${idx + 1}. Address: ${r["address"]}, value : ${r["value"]}\n")
                             }
                             sb.toString()
                         }
                         "aob" -> {
                             val res = MemoryEngine.searchAob(value)
-                            if (res.isEmpty()) return "搜索完成，未找到结果"
-                            val sb = StringBuilder("找到 ${res.size} 个结果：\n")
+                            if (res.isEmpty()) return "Search complete; no results found"
+                            val sb = StringBuilder("Found ${res.size}  results:\n")
                             for ((idx, r) in res.take(50).withIndex()) {
-                                sb.append("${idx + 1}. 地址: ${r["address"]}\n")
+                                sb.append("${idx + 1}. Address: ${r["address"]}\n")
                             }
                             sb.toString()
                         }
-                        else -> "❌ 未知搜索模式: $mode"
+                        else -> "❌ UnknownSearch mode: $mode"
                     }
                 }
                 "read_memory" -> {
                     val address = args.optString("address", "")
                     val type = args.optString("type", "dword")
-                    if (MemoryEngine.getAttachedPid() == null) return "❌ 未附加游戏进程"
-                    val addrLong = address.removePrefix("0x").toLongOrNull(16) ?: return "❌ 无效地址: $address"
+                    if (MemoryEngine.getAttachedPid() == null) return "❌ No game process attached"
+                    val addrLong = address.removePrefix("0x").toLongOrNull(16) ?: return "❌ Invalid address: $address"
                     val value = MemoryEngine.readMemory(addrLong, type)
-                    "地址 $address 的值: $value (类型: $type)"
+                    "Value at address $address: $value (Type: $type)"
                 }
                 "write_memory" -> {
                     val address = args.optString("address", "")
                     val value = args.optString("value", "")
                     val type = args.optString("type", "dword")
-                    if (MemoryEngine.getAttachedPid() == null) return "❌ 未附加游戏进程"
-                    val addrLong = address.removePrefix("0x").toLongOrNull(16) ?: return "❌ 无效地址: $address"
+                    if (MemoryEngine.getAttachedPid() == null) return "❌ No game process attached"
+                    val addrLong = address.removePrefix("0x").toLongOrNull(16) ?: return "❌ Invalid address: $address"
                     val numVal: Any = if (type == "float" || type == "double") value.toDoubleOrNull() ?: 0.0 else value.toLongOrNull() ?: 0
                     val success = MemoryEngine.writeMemory(addrLong, numVal, type)
                     if (success) {
-                        // 写入后验证
+                        // Implementation detail.
                         val readBack = MemoryEngine.readMemory(addrLong, type)
-                        "✅ 已写入 $value 到地址 $address，回读验证: $readBack"
+                        "✅ Wrote $value to address $address; read-back: $readBack"
                     } else {
-                        "❌ 写入失败，可能是地址不可写或权限不足"
+                        "❌ Write failed; the address may be read-only or permissions may be insufficient"
                     }
                 }
-                else -> "❌ 未知工具: $name"
+                else -> "❌ Unknown tool: $name"
             }
         } catch (e: Exception) {
-            "❌ 执行出错: ${e.message}"
+            "❌ Execution error: ${e.message}"
         }
     }
 
-    // 流式调用 LLM API
+    // Implementation detail.
     private fun callLlmApiStream(userInput: String, attachedApp: String, onChunk: (String) -> Unit) {
         val configPrefs = getSharedPreferences("gg_llm_config", Context.MODE_PRIVATE)
         val configJson = configPrefs.getString("config", null)
@@ -2377,27 +2377,27 @@ class OverlayService : Service() {
         }
 
         if (baseUrl.isEmpty() || apiKey.isEmpty()) {
-            onChunk("⚠️ 请先在设置中配置 LLM API")
+            onChunk("⚠️ Configure the LLM API in Settings first")
             return
         }
 
         val modelInfo = getModelInfo(model)
         val systemPrompt = buildString {
-            append("你是 GG-AI 游戏内存修改助手。你当前使用的底层大模型是：$modelInfo。\n")
-            append("当用户问你是什么模型时，你必须回答「$modelInfo」。GG-AI 只是应用名称，不是模型名称。\n\n")
-            append("当用户要求搜索/读取/修改内存时，调用 search_memory/read_memory/write_memory 工具执行真实操作，绝对不要模拟结果。\n")
-            append("只有用户明确要求写脚本时才输出 Lua 脚本（luaj-jse-3.0.2.jar），用 ```lua 包裹。\n\n")
-            if (attachedApp.isNotEmpty()) append("当前已附加游戏进程: $attachedApp\n")
-            append("\n渲染支持：客户端支持 Markdown、LaTeX 公式（${'$'}...${'$'} / ${'$'}${'$'}...${'$'}${'$'}）和 Mermaid 图表。")
-            append("用户要求画图时，必须直接输出 ```mermaid 代码块，不要解释。")
-            append("Mermaid 版本 8.14.0，只支持 graph/sequenceDiagram/classDiagram/stateDiagram/gantt/pie，不要用 flowchart/mindmap/timeline 等新类型，不要用 %%{init}%% 指令，特殊字符用双引号包裹。")
-            append("\n使用简洁友好的中文回复，操作步骤用编号列出。")
+            append("You are GG-AI, a game-memory assistant. The underlying model is: $modelInfo.\n")
+            append("When asked which model you are, answer exactly \"$modelInfo\". GG-AI is the app name, not the model name.\n\n")
+            append("When the user requests a search, read, or edit, call the search_memory/read_memory/write_memory tools and never simulate results.\n")
+            append("Only output a Lua script when the user explicitly requests one (luaj-jse-3.0.2.jar), wrapped in ```lua.\n\n")
+            if (attachedApp.isNotEmpty()) append("Currently attached game process: $attachedApp\n")
+            append("\nRendering support: Markdown, LaTeX formulas (${'$'}...${'$'} / ${'$'}${'$'}...${'$'}${'$'}), and Mermaid diagrams.")
+            append("When asked for a diagram, output a ```mermaid code block directly without explanation.")
+            append("Mermaid version 8.14.0 supports graph, sequenceDiagram, classDiagram, stateDiagram, gantt, and pie only.\n")
+            append("\nUse concise, friendly English and numbered steps.")
         }
 
         val messages = JSONArray()
         messages.put(JSONObject().apply { put("role", "system"); put("content", systemPrompt) })
         for ((sender, msg) in chatMessages.takeLast(10)) {
-            messages.put(JSONObject().apply { put("role", if (sender == "👤 我") "user" else "assistant"); put("content", msg) })
+            messages.put(JSONObject().apply { put("role", if (sender == "👤 Me") "user" else "assistant"); put("content", msg) })
         }
         messages.put(JSONObject().apply { put("role", "user"); put("content", userInput) })
 
@@ -2408,7 +2408,7 @@ class OverlayService : Service() {
             baseUrl.trimEnd('/')
         }
 
-        // 统一使用 OpenAI 兼容接口（Gemini 使用 /v1beta/openai/）
+        // Implementation detail.
         val url = URL("$effectiveBaseUrl/chat/completions")
         val conn = url.openConnection() as HttpURLConnection
         conn.requestMethod = "POST"
@@ -2433,7 +2433,7 @@ class OverlayService : Service() {
 
         val responseCode = conn.responseCode
         if (responseCode != 200) {
-            val errorStream = conn.errorStream?.bufferedReader()?.readText() ?: "未知错误"
+            val errorStream = conn.errorStream?.bufferedReader()?.readText() ?: "Unknown error"
             throw Exception("HTTP $responseCode: $errorStream")
         }
 
@@ -2459,30 +2459,30 @@ class OverlayService : Service() {
         conn.disconnect()
     }
 
-    // 根据模型名称返回公司+版本信息
+    // Implementation detail.
     private fun getModelInfo(modelName: String): String {
         val m = modelName.lowercase()
         return when {
-            m.contains("deepseek-reasoner") || m.contains("deepseek-r1") -> "DeepSeek-R1（深度求索公司，推理增强模型）"
-            m.contains("deepseek") -> "DeepSeek-V3（深度求索公司，通用对话模型）"
-            m.contains("mimo") -> "MiMo-v2.5-Pro（小米公司，大语言模型）"
-            m.contains("gpt-4o") -> "GPT-4o（OpenAI 公司，多模态模型）"
-            m.contains("gpt-4") -> "GPT-4（OpenAI 公司，大语言模型）"
-            m.contains("gpt-3.5") -> "GPT-3.5-Turbo（OpenAI 公司，大语言模型）"
-            m.contains("gemini") -> "Gemini（Google 公司，大语言模型）"
-            m.contains("claude") -> "Claude（Anthropic 公司，大语言模型）"
-            m.contains("qwen") || m.contains("tongyi") -> "通义千问（阿里巴巴公司，大语言模型）"
-            m.contains("glm") || m.contains("chatglm") -> "ChatGLM（智谱AI公司，大语言模型）"
+            m.contains("deepseek-reasoner") || m.contains("deepseek-r1") -> "DeepSeek-R1 (DeepSeek,reasoningmodel)"
+            m.contains("deepseek") -> "DeepSeek-V3 (DeepSeek,general-purpose chatmodel)"
+            m.contains("mimo") -> "MiMo-v2.5-Pro (Xiaomi,language model)"
+            m.contains("gpt-4o") -> "GPT-4o (OpenAI ,multimodalmodel)"
+            m.contains("gpt-4") -> "GPT-4 (OpenAI ,language model)"
+            m.contains("gpt-3.5") -> "GPT-3.5-Turbo (OpenAI ,language model)"
+            m.contains("gemini") -> "Gemini (Google ,language model)"
+            m.contains("claude") -> "Claude (Anthropic ,language model)"
+            m.contains("qwen") || m.contains("tongyi") -> "Qwen (Alibaba,language model)"
+            m.contains("glm") || m.contains("chatglm") -> "ChatGLM (Zhipu AI,language model)"
             else -> modelName
         }
     }
 
-    // ==================== 保存聊天到存储 ====================
+    // Implementation detail.
 
     private fun saveChatToStorage() {
         if (chatMessages.isEmpty()) {
             handler.post {
-                Toast.makeText(this, "没有聊天记录可保存", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "No chat history to save", Toast.LENGTH_SHORT).show()
             }
             return
         }
@@ -2491,7 +2491,7 @@ class OverlayService : Service() {
             val prefs = getSharedPreferences("gg_overlay_chat", Context.MODE_PRIVATE)
             val editor = prefs.edit()
 
-            // 保存为 JSON 数组
+            // Implementation detail.
             val jsonArray = JSONArray()
             for ((sender, msg) in chatMessages) {
                 jsonArray.put(JSONObject().apply {
@@ -2501,29 +2501,29 @@ class OverlayService : Service() {
                 })
             }
 
-            // 使用时间戳作为 key
+            // Implementation detail.
             val sessionId = "chat_${System.currentTimeMillis()}"
             editor.putString(sessionId, jsonArray.toString())
             editor.putString("latest_session_id", sessionId)
             editor.apply()
 
             handler.post {
-                Toast.makeText(this, "✅ 聊天已保存，可在主应用查看", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "✅ Chat saved; view it in the main app", Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
             handler.post {
-                Toast.makeText(this, "❌ 保存失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "❌ Save failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    // ==================== 脚本库面板 ====================
+    // Implementation detail.
 
     private fun showScriptPanel() {
         saveLastPanel("script")
-        makeDraggablePanel("脚本库", { content ->
+        makeDraggablePanel("Script Library", { content ->
             val status = TextView(this).apply {
-                text = "正在加载脚本..."
+                text = "Loading scripts..."
                 setTextColor(Color.parseColor("#F2F3F8"))
                 textSize = 12f
                 setPadding(dp(12), dp(8), dp(12), dp(4))
@@ -2540,14 +2540,14 @@ class OverlayService : Service() {
             sv.addView(list)
             content.addView(sv)
 
-            // 加载脚本的函数
+            // Implementation detail.
             fun loadScripts() {
                 list.removeAllViews()
-                status.text = "正在加载脚本..."
+                status.text = "Loading scripts..."
                 Thread {
                     val scripts = loadScriptsFromStorage()
                     handler.post {
-                        status.text = "找到 ${scripts.size} 个脚本"
+                        status.text = "Found ${scripts.size} scripts"
                         for (script in scripts) {
                             val item = LinearLayout(this).apply {
                                 orientation = LinearLayout.HORIZONTAL
@@ -2562,30 +2562,30 @@ class OverlayService : Service() {
                                 ).apply { bottomMargin = dp(6) }
                             }
                             val nameText = TextView(this).apply {
-                                text = script["name"] ?: "未知脚本"
+                                text = script["name"] ?: "Unknown script"
                                 setTextColor(Color.parseColor("#F2F3F8"))
                                 textSize = 14f
                                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                             }
                             item.addView(nameText)
 
-                            val runBtn = smallBtn("▶ 运行") {
+                            val runBtn = smallBtn("▶ Run") {
                                 val scriptContent = script["content"] ?: ""
                                 if (scriptContent.isNotEmpty()) {
-                                    status.text = "正在运行: ${script["name"]}..."
+                                    status.text = "Running: ${script["name"]}..."
                                     Thread {
                                         try {
                                             LuaEngine.setContext(this@OverlayService)
                                             val output = LuaEngine.executeScript(scriptContent)
-                                            // 自动保存日志
-                                            saveScriptLog(script["name"] ?: "脚本", output)
+                                            // Implementation detail.
+                                            saveScriptLog(script["name"] ?: "Script", output)
                                             handler.post {
-                                                status.text = "✅ ${script["name"]} 执行完成"
-                                                Toast.makeText(this@OverlayService, "✅ ${script["name"]} 执行完成，日志已保存", Toast.LENGTH_SHORT).show()
+                                                status.text = "✅ ${script["name"]} Execution complete"
+                                                Toast.makeText(this@OverlayService, "✅ ${script["name"]} completed; log saved", Toast.LENGTH_SHORT).show()
                                             }
                                         } catch (e: Exception) {
                                             handler.post {
-                                                status.text = "❌ 执行失败: ${e.message}"
+                                                status.text = "❌ Execution failed: ${e.message}"
                                             }
                                         }
                                     }.start()
@@ -2597,7 +2597,7 @@ class OverlayService : Service() {
 
                         if (scripts.isEmpty()) {
                             list.addView(TextView(this).apply {
-                                text = "暂无脚本\n请在主应用脚本库中创建"
+                                text = "No scripts\nCreate one in Script Library in the main app"
                                 setTextColor(Color.parseColor("#4A6572"))
                                 textSize = 13f
                                 setPadding(dp(12), dp(20), dp(12), dp(8))
@@ -2608,10 +2608,10 @@ class OverlayService : Service() {
                 }.start()
             }
 
-            // 首次加载
+            // Implementation detail.
             loadScripts()
 
-            // 底部按钮：刷新 + 关闭窗口
+            // Implementation detail.
             val bar = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(dp(12), dp(4), dp(12), dp(8)) }
             bar.addView(iconBtn(R.drawable.shuaxing) { loadScripts() }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
             bar.addView(iconBtn(R.drawable.ck_gb) { closePanel() }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
@@ -2620,14 +2620,14 @@ class OverlayService : Service() {
     }
 
     /**
-     * 保存脚本运行日志
+     * SaveScript Run Log
      */
     private fun saveScriptLog(scriptName: String, output: String) {
         try {
             val now = java.text.SimpleDateFormat("MMddHHmm", java.util.Locale.getDefault()).format(java.util.Date())
             val timeStr = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())
 
-            // 保存到 gg_script_logs SharedPreferences（与 MainActivity 的 getOverlayScriptLogs 对应）
+            // Implementation detail.
             val prefs = getSharedPreferences("gg_script_logs", Context.MODE_PRIVATE)
             val existing = prefs.getString("logs", "[]") ?: "[]"
             val logsArray = org.json.JSONArray(existing)
@@ -2645,13 +2645,13 @@ class OverlayService : Service() {
     }
 
     /**
-     * 从存储加载脚本列表
+     * Implementation detail.
      */
     private fun loadScriptsFromStorage(): List<Map<String, String>> {
         val scripts = mutableListOf<Map<String, String>>()
 
         try {
-            // 从 SharedPreferences 读取（由主应用同步，已包含内置脚本）
+            // Implementation detail.
             val prefs = getSharedPreferences("gg_scripts", Context.MODE_PRIVATE)
             val scriptsJson = prefs.getString("scripts", "[]") ?: "[]"
             val jsonArray = org.json.JSONArray(scriptsJson)
@@ -2659,35 +2659,35 @@ class OverlayService : Service() {
                 val json = jsonArray.getJSONObject(i)
                 scripts.add(mapOf(
                     "id" to json.optString("id", ""),
-                    "name" to json.optString("name", "未知"),
+                    "name" to json.optString("name", "Unknown"),
                     "content" to json.optString("content", ""),
                     "description" to json.optString("description", "")
                 ))
             }
         } catch (_: Exception) {}
 
-        // 如果没有从主应用同步到脚本，添加内置脚本作为备用
+        // Implementation detail.
         if (scripts.none { it["id"] == "builtin_test" }) {
-            // 添加内置脚本
+            // Implementation detail.
             scripts.add(mapOf(
             "id" to "builtin_test",
-            "name" to "运行测试",
-            "content" to """-- 游戏修改器 Lua 测试脚本
+            "name" to "Run Test",
+            "content" to """-- game modifier Lua test script
 function searchData(value, valueType)
     gg.clearResults()
     gg.searchNumber(value, valueType)
     local count = gg.getResultCount()
-    gg.toast("搜索完成，找到 " .. count .. " 条结果")
+    gg.toast("Search complete; found " .. count .. " results")
     return count
 end
 function menu1_search()
     local choice = gg.choice({
-        " 搜索整数 9999",
-        " 搜索浮点 1.0",
-        " 搜索双精度 3.14"
-    }, nil, "【数值搜索】请选择搜索类型")
+        " Search integer 9999",
+        " Search float 1.0",
+        " Search double 3.14"
+    }, nil, "【Value search】Choose a search type")
     if choice == nil then
-        gg.toast("已取消")
+        gg.toast("Cancelled")
         return
     end
     if choice == 1 then
@@ -2700,12 +2700,12 @@ function menu1_search()
 end
 function menu2_advanced()
     local choice = gg.choice({
-        " 修改搜索结果为 88888",
-        " 冻结当前结果",
-        " 清除所有结果"
-    }, nil, "【高级操作】请选择操作")
+        " Change search results to 88888",
+        " Freeze current results",
+        " Clear all results"
+    }, nil, "【Advanced operations】Choose an operation")
     if choice == nil then
-        gg.toast("已取消")
+        gg.toast("Cancelled")
         return
     end
     if choice == 1 then
@@ -2717,9 +2717,9 @@ function menu2_advanced()
                 results[i].flags = gg.TYPE_DWORD
             end
             gg.setValues(results)
-            gg.toast("已修改 " .. count .. " 条数据为 88888")
+            gg.toast("Updated " .. count .. " items to 88888")
         else
-            gg.toast("没有搜索结果")
+            gg.toast("No search results")
         end
     elseif choice == 2 then
         local count = gg.getResultCount()
@@ -2729,25 +2729,25 @@ function menu2_advanced()
                 results[i].freeze = true
             end
             gg.addListItems(results)
-            gg.toast("已冻结 " .. count .. " 条数据")
+            gg.toast("Froze " .. count .. " items")
         else
-            gg.toast("没有搜索结果")
+            gg.toast("No search results")
         end
     elseif choice == 3 then
         gg.clearResults()
         gg.clearList()
-        gg.toast("已清除所有结果")
+        gg.toast("All results cleared")
     end
 end
 function mainMenu()
     while true do
         local main = gg.choice({
-            " 数值搜索",
-            " 高级操作",
-            " 退出脚本"
-        }, nil, "=== Lua 测试脚本 v1.0 ===")
+            " Value search",
+            " Advanced operations",
+            " Exit script"
+        }, nil, "=== Lua test script v1.0 ===")
         if main == nil or main == 3 then
-            gg.toast("脚本已退出")
+            gg.toast("Script exited")
             break
         elseif main == 1 then
             menu1_search()
@@ -2756,10 +2756,10 @@ function mainMenu()
         end
     end
 end
-gg.toast("Lua 测试脚本已加载")
+gg.toast("Lua test script loaded")
 gg.sleep(1000)
 mainMenu()""",
-            "description" to "Lua 菜单弹窗 + 数据搜索测试"
+            "description" to "Lua menu and data search test"
         ))
         }
 
@@ -2767,10 +2767,10 @@ mainMenu()""",
     }
 
     /**
-     * 显示脚本运行输出对话框
+     * Implementation detail.
      */
 
-    // ==================== UI 工具 ====================
+    // Implementation detail.
 
     private fun menuBtn(text: String, iconRes: Int? = null, onClick: () -> Unit): LinearLayout {
         return LinearLayout(this).apply {

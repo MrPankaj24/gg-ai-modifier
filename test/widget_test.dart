@@ -6,7 +6,7 @@ void main() {
     await tester.pumpWidget(const GgModifierApp());
     await tester.pumpAndSettle();
 
-    // Verify that the AI chat page title is present
-    expect(find.text('Chat History'), findsOneWidget);
+    // Verify that the main navigation is rendered.
+    expect(find.byType(NavigationBar), findsOneWidget);
   });
 }
